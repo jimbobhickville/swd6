@@ -1,0 +1,7 @@
+alembic
+sqlalchemy
+psycopg2
+SQLAlchemy-Utils
+falcon
+gunicorn
+oslo.config

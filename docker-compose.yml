@@ -1,0 +1,25 @@
+version: '2'
+services:
+  olddb:
+    image: mysql:5.6
+    ports:
+      - '3307:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=swd6
+    volumes:
+      - ./api/mysqldata:/docker-entrypoint-initdb.d
+  db:
+    image: postgres
+    ports:
+      - '5433:5432'
+    environment:
+      - POSTGRES_PASSWORD=swd6
+      - POSTGRES_USER=swd6
+  dbconvert:
+    image: dimitri/pgloader
+    links:
+      - olddb
+      - db
+    volumes:
+      - ./convert-db.sh:/tmp/convert-db.sh
+    command: /tmp/convert-db.sh
