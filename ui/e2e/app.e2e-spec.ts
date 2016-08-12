@@ -7,8 +7,8 @@ describe('ui App', function() {
     page = new UiPage();
   });
 
-  it('should display message saying app works', () => {
+  it('should display the application title', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toEqual('app works!');
+    expect(page.getParagraphText()).toEqual('SWD6 Character Cantina');
   });
 });
