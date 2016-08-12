@@ -3,9 +3,8 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
-from api import constant
-from api.config import ApiConfig
-from api.db import db
+from swd6.config import CONF
+from swd6.db.models import db
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -39,10 +38,8 @@ def run_migrations_offline():
     script output.
 
     """
-    conf = ApiConfig()
-    url = conf.database.sqlalchemy_uri
-    context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(url=CONF.db.uri, target_metadata=target_metadata,
+                      literal_binds=True)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -55,8 +52,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    conf = ApiConfig.from_file(constant.API_CONF_FILE)
-    engine = create_engine(conf.database.sqlalchemy_uri, poolclass=pool.NullPool)
+    engine = create_engine(CONF.db.uri, poolclass=pool.NullPool)
 
     with engine.connect() as connection:
         context.configure(
