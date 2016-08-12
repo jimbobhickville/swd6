@@ -1,0 +1,12 @@
+.coverage
+.git
+*.pyc
+*.sqlite
+*.log
+.tox
+.cache
+.eggs
+*.egg
+*.egg-info
+.idea
+__pycache__
