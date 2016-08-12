@@ -19,7 +19,7 @@ with open(requirements_path) as requirements_file:
     requires = requirements_file.readlines()
 
 setuptools.setup(
-    name="swd6-api",
+    name="swd6",
     version="0.1.0",
     author="Greg Hill",
     author_email="jimbobhickville@gmail.com",
