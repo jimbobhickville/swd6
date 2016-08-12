@@ -56,7 +56,7 @@ class Attribute(db.Model):
     name = db.Column(db.String(30), nullable=False)
     abbreviation = db.Column(db.String(3), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    has_level = db.Column(db.SmallInteger, nullable=False, index=True, server_default=db.text("'1'::smallint"))
+    has_level = db.Column(db.Boolean, nullable=False, index=True, server_default=db.text("'true'::boolean"))
 
 
 t_character_armor = db.Table(
@@ -73,7 +73,7 @@ class CharacterSheet(db.Model):
     race_id = db.Column(db.ForeignKey('race.race_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
     planet_id = db.Column(db.ForeignKey('planet.planet_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
     character_type_id = db.Column(db.ForeignKey('character_type.character_type_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    is_template = db.Column(db.SmallInteger, nullable=False, index=True, server_default=db.text("'0'::smallint"))
+    is_template = db.Column(db.Boolean, nullable=False, index=True, server_default=db.text("'false'::boolean"))
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     background = db.Column(db.Text, nullable=False)
@@ -250,8 +250,8 @@ class Skill(db.Model):
     attrib_id = db.Column(db.ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    has_specializations = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'1'::smallint"))
-    has_abilities = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
+    has_specializations = db.Column(db.Boolean, nullable=False, server_default=db.text("'true'::boolean"))
+    has_abilities = db.Column(db.Boolean, nullable=False, server_default=db.text("'false'::boolean"))
 
     attribute = db.relationship('Attribute')
 
@@ -290,7 +290,7 @@ class Starship(db.Model):
     capacity_troops = db.Column(db.SmallInteger, nullable=False)
     capacity_cargo = db.Column(db.SmallInteger, nullable=False)
     capacity_consumables = db.Column(db.SmallInteger, nullable=False)
-    has_nav_computer = db.Column(db.SmallInteger, nullable=False)
+    has_nav_computer = db.Column(db.Boolean, nullable=False, server_default=db.text("'true'::boolean"))
     hyperdrive_multiplier = db.Column(db.Float(53), nullable=False)
     hyperdrive_backup = db.Column(db.Float(53), nullable=False)
     speed_space = db.Column(db.SmallInteger, nullable=False)
