@@ -1,468 +1,466 @@
-from sqlalchemy import BigInteger, Column, Enum, Float, ForeignKey, Index, Integer, SmallInteger, String, Table, Text, text
-from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql.base import ARRAY
+import flask_sqlalchemy
+from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.ext.declarative import declarative_base
 
-
-Base = declarative_base()
-metadata = Base.metadata
+db = flask_sqlalchemy.SQLAlchemy()
 
 
-class Ability(Base):
+class Ability(db.Model):
     __tablename__ = 'ability'
 
-    ability_id = Column(Integer, primary_key=True, server_default=text("nextval('ability_ability_id_seq'::regclass)"))
-    skill_id = Column(SmallInteger, nullable=False)
-    name = Column(String(100), nullable=False)
-    difficulty = Column(Text, nullable=False)
-    time_required = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
+    id = db.Column('ability_id', db.Integer, primary_key=True, server_default=db.text("nextval('ability_ability_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    difficulty = db.Column(db.Text, nullable=False)
+    time_required = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
 
-    prereq_abilitys = relationship(
+    skill = db.relationship('Skill')
+    prerequisites = db.relationship(
         'Ability',
         secondary='ability_prerequisite',
-        primaryjoin='Ability.ability_id == ability_prerequisite.c.ability_id',
-        secondaryjoin='Ability.ability_id == ability_prerequisite.c.prereq_ability_id'
+        primaryjoin='Ability.id == ability_prerequisite.c.ability_id',
+        secondaryjoin='Ability.id == ability_prerequisite.c.prereq_ability_id'
     )
 
 
-t_ability_prerequisite = Table(
-    'ability_prerequisite', metadata,
-    Column('ability_id', ForeignKey('ability.ability_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('prereq_ability_id', ForeignKey('ability.ability_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_ability_prerequisite = db.Table(
+    'ability_prerequisite',
+    db.Column('ability_id', db.ForeignKey('ability.ability_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('prereq_ability_id', db.ForeignKey('ability.ability_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-class Armor(Base):
+class Armor(db.Model):
     __tablename__ = 'armor'
 
-    armor_id = Column(Integer, primary_key=True, server_default=text("nextval('armor_armor_id_seq'::regclass)"))
-    areas_covered = Column(ARRAY(ENUM('Head', 'Neck', 'Upper Chest', 'Abdomen', 'Groin', 'Upper Back', 'Lower Back', 'Buttocks', 'Shoulders', 'Upper Arms', 'Forearms', 'Hands', 'Thighs', 'Shins', 'Feet', 'Joints', name='armor_areas_covered')), nullable=False)
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    resist_physical_dice = Column(SmallInteger, nullable=False)
-    resist_physical_pip = Column(SmallInteger, nullable=False)
-    resist_energy_dice = Column(SmallInteger, nullable=False)
-    resist_energy_pip = Column(SmallInteger, nullable=False)
-    availability = Column(Enum('Common', 'Rare', 'Not For Sale', name='armor_availability'), nullable=False, server_default=text("'Common'::armor_availability"))
-    price_new = Column(SmallInteger, nullable=False)
-    price_used = Column(SmallInteger, nullable=False)
+    id = db.Column('armor_id', db.Integer, primary_key=True, server_default=db.text("nextval('armor_armor_id_seq'::regclass)"))
+    areas_covered = db.Column(pg.ARRAY(db.Enum('Head', 'Neck', 'Upper Chest', 'Abdomen', 'Groin', 'Upper Back', 'Lower Back', 'Buttocks', 'Shoulders', 'Upper Arms', 'Forearms', 'Hands', 'Thighs', 'Shins', 'Feet', 'Joints', name='armor_areas_covered')), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    resist_physical_dice = db.Column(db.SmallInteger, nullable=False)
+    resist_physical_pip = db.Column(db.SmallInteger, nullable=False)
+    resist_energy_dice = db.Column(db.SmallInteger, nullable=False)
+    resist_energy_pip = db.Column(db.SmallInteger, nullable=False)
+    availability = db.Column(db.Enum('Common', 'Rare', 'Not For Sale', name='armor_availability'), nullable=False, server_default=db.text("'Common'::armor_availability"))
+    price_new = db.Column(db.SmallInteger, nullable=False)
+    price_used = db.Column(db.SmallInteger, nullable=False)
 
-    characters = relationship('CharacterSheet', secondary='character_armor')
+    characters = db.relationship('CharacterSheet', secondary='character_armor')
 
 
-class Attribute(Base):
+class Attribute(db.Model):
     __tablename__ = 'attribute'
 
-    attrib_id = Column(Integer, primary_key=True, server_default=text("nextval('attribute_attrib_id_seq'::regclass)"))
-    name = Column(String(30), nullable=False)
-    abbreviation = Column(String(3), nullable=False)
-    description = Column(Text, nullable=False)
-    has_level = Column(SmallInteger, nullable=False, index=True, server_default=text("'1'::smallint"))
+    id = db.Column('attrib_id', db.Integer, primary_key=True, server_default=db.text("nextval('attribute_attrib_id_seq'::regclass)"))
+    name = db.Column(db.String(30), nullable=False)
+    abbreviation = db.Column(db.String(3), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    has_level = db.Column(db.SmallInteger, nullable=False, index=True, server_default=db.text("'1'::smallint"))
 
 
-t_character_armor = Table(
-    'character_armor', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('armor_id', ForeignKey('armor.armor_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_armor = db.Table(
+    'character_armor',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('armor_id', db.ForeignKey('armor.armor_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-class CharacterSheet(Base):
+class CharacterSheet(db.Model):
     __tablename__ = 'character_sheet'
 
-    character_id = Column(BigInteger, primary_key=True, server_default=text("nextval('character_sheet_character_id_seq'::regclass)"))
-    race_id = Column(ForeignKey('race.race_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    planet_id = Column(ForeignKey('planet.planet_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    character_type_id = Column(ForeignKey('character_type.character_type_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    is_template = Column(SmallInteger, nullable=False, index=True, server_default=text("'0'::smallint"))
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    background = Column(Text, nullable=False)
-    motivation = Column(Text, nullable=False)
-    quote = Column(Text, nullable=False)
-    gender = Column(Enum('M', 'F', name='character_sheet_gender'), nullable=False, server_default=text("'M'::character_sheet_gender"))
-    age = Column(SmallInteger, nullable=False)
-    height = Column(Float(53), nullable=False)
-    weight = Column(SmallInteger, nullable=False)
-    move_land = Column(SmallInteger, nullable=False, server_default=text("'10'::smallint"))
-    move_water = Column(SmallInteger, nullable=False, server_default=text("'0'::smallint"))
-    move_air = Column(SmallInteger, nullable=False, server_default=text("'0'::smallint"))
-    force_pts = Column(SmallInteger, nullable=False)
-    dark_side_pts = Column(SmallInteger, nullable=False)
-    character_pts = Column(SmallInteger, nullable=False)
-    credits_owned = Column(BigInteger, nullable=False)
-    credits_debt = Column(BigInteger, nullable=False)
+    character_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('character_sheet_character_id_seq'::regclass)"))
+    race_id = db.Column(db.ForeignKey('race.race_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    planet_id = db.Column(db.ForeignKey('planet.planet_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    character_type_id = db.Column(db.ForeignKey('character_type.character_type_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    is_template = db.Column(db.SmallInteger, nullable=False, index=True, server_default=db.text("'0'::smallint"))
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    background = db.Column(db.Text, nullable=False)
+    motivation = db.Column(db.Text, nullable=False)
+    quote = db.Column(db.Text, nullable=False)
+    gender = db.Column(db.Enum('M', 'F', name='character_sheet_gender'), nullable=False, server_default=db.text("'M'::character_sheet_gender"))
+    age = db.Column(db.SmallInteger, nullable=False)
+    height = db.Column(db.Float(53), nullable=False)
+    weight = db.Column(db.SmallInteger, nullable=False)
+    move_land = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'10'::smallint"))
+    move_water = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
+    move_air = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
+    force_pts = db.Column(db.SmallInteger, nullable=False)
+    dark_side_pts = db.Column(db.SmallInteger, nullable=False)
+    character_pts = db.Column(db.SmallInteger, nullable=False)
+    credits_owned = db.Column(db.BigInteger, nullable=False)
+    credits_debt = db.Column(db.BigInteger, nullable=False)
 
-    character_type = relationship('CharacterType')
-    planet = relationship('Planet')
-    race = relationship('Race')
-    rangeds = relationship('WeaponRanged', secondary='character_weapon_ranged')
-    starships = relationship('Starship', secondary='character_starship')
-    melees = relationship('WeaponMelee', secondary='character_weapon_melee')
-    explosives = relationship('WeaponExplosive', secondary='character_weapon_explosive')
-    vehicles = relationship('Vehicle', secondary='character_vehicle')
+    character_type = db.relationship('CharacterType')
+    planet = db.relationship('Planet')
+    race = db.relationship('Race')
+    ranged_weapons = db.relationship('WeaponRanged', secondary='character_weapon_ranged')
+    starships = db.relationship('Starship', secondary='character_starship')
+    melee_weapons = db.relationship('WeaponMelee', secondary='character_weapon_melee')
+    explosives = db.relationship('WeaponExplosive', secondary='character_weapon_explosive')
+    vehicles = db.relationship('Vehicle', secondary='character_vehicle')
 
 
-t_character_skill_level = Table(
-    'character_skill_level', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('attrib_id', ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('skill_id', ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True),
-    Column('specialize_id', ForeignKey('skill_specialization.specialize_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True),
-    Column('skill_dice', SmallInteger, nullable=False),
-    Column('skill_pip', SmallInteger, nullable=False)
+t_character_skill_level = db.Table(
+    'character_skill_level',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('attrib_id', db.ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('skill_id', db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True),
+    db.Column('specialize_id', db.ForeignKey('skill_specialization.specialize_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True),
+    db.Column('skill_dice', db.SmallInteger, nullable=False),
+    db.Column('skill_pip', db.SmallInteger, nullable=False)
 )
 
 
-t_character_starship = Table(
-    'character_starship', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('starship_id', ForeignKey('starship.starship_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_starship = db.Table(
+    'character_starship',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('starship_id', db.ForeignKey('starship.starship_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-class CharacterType(Base):
+class CharacterType(db.Model):
     __tablename__ = 'character_type'
 
-    character_type_id = Column(Integer, primary_key=True, server_default=text("nextval('character_type_character_type_id_seq'::regclass)"))
-    name = Column(String(50), nullable=False)
+    id = db.Column('character_type_id', db.Integer, primary_key=True, server_default=db.text("nextval('character_type_character_type_id_seq'::regclass)"))
+    name = db.Column(db.String(50), nullable=False)
 
 
-t_character_vehicle = Table(
-    'character_vehicle', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('vehicle_id', ForeignKey('vehicle.vehicle_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_vehicle = db.Table(
+    'character_vehicle',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('vehicle_id', db.ForeignKey('vehicle.vehicle_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-t_character_weapon_explosive = Table(
-    'character_weapon_explosive', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('explosive_id', ForeignKey('weapon_explosive.explosive_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_weapon_explosive = db.Table(
+    'character_weapon_explosive',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('explosive_id', db.ForeignKey('weapon_explosive.explosive_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-t_character_weapon_melee = Table(
-    'character_weapon_melee', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('melee_id', ForeignKey('weapon_melee.melee_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_weapon_melee = db.Table(
+    'character_weapon_melee',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('melee_id', db.ForeignKey('weapon_melee.melee_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-t_character_weapon_ranged = Table(
-    'character_weapon_ranged', metadata,
-    Column('character_id', ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('ranged_id', ForeignKey('weapon_ranged.ranged_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+t_character_weapon_ranged = db.Table(
+    'character_weapon_ranged',
+    db.Column('character_id', db.ForeignKey('character_sheet.character_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('ranged_id', db.ForeignKey('weapon_ranged.ranged_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
 )
 
 
-class Image(Base):
+class Image(db.Model):
     __tablename__ = 'image'
 
-    image_id = Column(BigInteger, primary_key=True, server_default=text("nextval('image_image_id_seq'::regclass)"))
-    mod_name = Column(String(40), nullable=False, index=True)
-    id = Column(BigInteger, nullable=False, index=True)
-    order_num = Column(SmallInteger, nullable=False)
-    name = Column(String(120), nullable=False)
-    dir = Column(String(100), nullable=False)
-    caption = Column(String(200), nullable=False)
-    image_width = Column(SmallInteger, nullable=False)
-    image_height = Column(SmallInteger, nullable=False)
-    thumb_width = Column(SmallInteger, nullable=False)
-    thumb_height = Column(SmallInteger, nullable=False)
+    image_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('image_image_id_seq'::regclass)"))
+    mod_name = db.Column(db.String(40), nullable=False, index=True)
+    id = db.Column(db.BigInteger, nullable=False, index=True)
+    order_num = db.Column(db.SmallInteger, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    dir = db.Column(db.String(100), nullable=False)
+    caption = db.Column(db.String(200), nullable=False)
+    image_width = db.Column(db.SmallInteger, nullable=False)
+    image_height = db.Column(db.SmallInteger, nullable=False)
+    thumb_width = db.Column(db.SmallInteger, nullable=False)
+    thumb_height = db.Column(db.SmallInteger, nullable=False)
 
 
-class Modifier(Base):
+class Modifier(db.Model):
     __tablename__ = 'modifier'
 
-    modifier_id = Column(BigInteger, primary_key=True, server_default=text("nextval('modifier_modifier_id_seq'::regclass)"))
-    mod_name = Column(String(40), nullable=False, index=True)
-    id = Column(BigInteger, nullable=False, index=True)
-    attrib_id = Column(ForeignKey('attribute.attrib_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    specialize_id = Column(ForeignKey('skill_specialization.specialize_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    modifier_dice = Column(SmallInteger, nullable=False)
-    modifier_pip = Column(SmallInteger, nullable=False)
-    conditions = Column(Text, nullable=False)
+    modifier_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('modifier_modifier_id_seq'::regclass)"))
+    mod_name = db.Column(db.String(40), nullable=False, index=True)
+    id = db.Column(db.BigInteger, nullable=False, index=True)
+    attrib_id = db.Column(db.ForeignKey('attribute.attrib_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    specialize_id = db.Column(db.ForeignKey('skill_specialization.specialize_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    modifier_dice = db.Column(db.SmallInteger, nullable=False)
+    modifier_pip = db.Column(db.SmallInteger, nullable=False)
+    conditions = db.Column(db.Text, nullable=False)
 
-    attrib = relationship('Attribute')
-    skill = relationship('Skill')
-    specialize = relationship('SkillSpecialization')
+    attribute = db.relationship('Attribute')
+    skill = db.relationship('Skill')
+    specialize = db.relationship('SkillSpecialization')
 
 
-class Planet(Base):
+class Planet(db.Model):
     __tablename__ = 'planet'
 
-    planet_id = Column(Integer, primary_key=True, server_default=text("nextval('planet_planet_id_seq'::regclass)"))
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
+    id = db.Column('planet_id', db.Integer, primary_key=True, server_default=db.text("nextval('planet_planet_id_seq'::regclass)"))
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
 
 
-class Race(Base):
+class Race(db.Model):
     __tablename__ = 'race'
 
-    race_id = Column(Integer, primary_key=True, server_default=text("nextval('race_race_id_seq'::regclass)"))
-    planet_id = Column(ForeignKey('planet.planet_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    playable_type = Column(Enum('PC', 'NPC', 'Creature', name='race_playable_type'), nullable=False, index=True, server_default=text("'PC'::race_playable_type"))
-    name = Column(String(100), nullable=False)
-    basic_ability = Column(Enum('Speak', 'Understand', 'None', name='race_basic_ability'), nullable=False, server_default=text("'Speak'::race_basic_ability"))
-    description = Column(Text, nullable=False)
-    special_abilities = Column(Text, nullable=False)
-    story_factors = Column(Text, nullable=False)
-    attribute_dice = Column(SmallInteger, nullable=False, server_default=text("'12'::smallint"))
-    attribute_pip = Column(SmallInteger, nullable=False)
-    min_move_land = Column(SmallInteger, nullable=False, server_default=text("'10'::smallint"))
-    max_move_land = Column(SmallInteger, nullable=False, server_default=text("'12'::smallint"))
-    min_move_water = Column(SmallInteger, nullable=False, server_default=text("'5'::smallint"))
-    max_move_water = Column(SmallInteger, nullable=False, server_default=text("'6'::smallint"))
-    min_move_air = Column(SmallInteger, nullable=False, server_default=text("'0'::smallint"))
-    max_move_air = Column(SmallInteger, nullable=False, server_default=text("'0'::smallint"))
-    min_height = Column(Float(53), nullable=False, server_default=text("'1.5'::double precision"))
-    max_height = Column(Float(53), nullable=False, server_default=text("'2'::double precision"))
+    id = db.Column('race_id', db.Integer, primary_key=True, server_default=db.text("nextval('race_race_id_seq'::regclass)"))
+    planet_id = db.Column(db.ForeignKey('planet.planet_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    playable_type = db.Column(db.Enum('PC', 'NPC', 'Creature', name='race_playable_type'), nullable=False, index=True, server_default=db.text("'PC'::race_playable_type"))
+    name = db.Column(db.String(100), nullable=False)
+    basic_ability = db.Column(db.Enum('Speak', 'Understand', 'None', name='race_basic_ability'), nullable=False, server_default=db.text("'Speak'::race_basic_ability"))
+    description = db.Column(db.Text, nullable=False)
+    special_abilities = db.Column(db.Text, nullable=False)
+    story_factors = db.Column(db.Text, nullable=False)
+    attribute_dice = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'12'::smallint"))
+    attribute_pip = db.Column(db.SmallInteger, nullable=False)
+    min_move_land = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'10'::smallint"))
+    max_move_land = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'12'::smallint"))
+    min_move_water = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'5'::smallint"))
+    max_move_water = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'6'::smallint"))
+    min_move_air = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
+    max_move_air = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
+    min_height = db.Column(db.Float(53), nullable=False, server_default=db.text("'1.5'::double precision"))
+    max_height = db.Column(db.Float(53), nullable=False, server_default=db.text("'2'::double precision"))
 
-    planet = relationship('Planet')
+    planet = db.relationship('Planet')
 
 
-t_race_attrib_levels = Table(
-    'race_attrib_levels', metadata,
-    Column('race_id', ForeignKey('race.race_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('attrib_id', ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('min_dice', SmallInteger, nullable=False, server_default=text("'2'::smallint")),
-    Column('min_pip', SmallInteger, nullable=False),
-    Column('max_dice', SmallInteger, nullable=False, server_default=text("'4'::smallint")),
-    Column('max_pip', SmallInteger, nullable=False),
-    Index('idx_16565_race_id_2', 'race_id', 'attrib_id', unique=True)
+t_race_attrib_levels = db.Table(
+    'race_attrib_levels',
+    db.Column('race_id', db.ForeignKey('race.race_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('attrib_id', db.ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('min_dice', db.SmallInteger, nullable=False, server_default=db.text("'2'::smallint")),
+    db.Column('min_pip', db.SmallInteger, nullable=False),
+    db.Column('max_dice', db.SmallInteger, nullable=False, server_default=db.text("'4'::smallint")),
+    db.Column('max_pip', db.SmallInteger, nullable=False),
+    db.Index('idx_16565_race_id_2', 'race_id', 'attrib_id', unique=True)
 )
 
 
-class Scale(Base):
+class Scale(db.Model):
     __tablename__ = 'scale'
 
-    scale_id = Column(Integer, primary_key=True, server_default=text("nextval('scale_scale_id_seq'::regclass)"))
-    name = Column(String(30), nullable=False)
-    scale_dice = Column(SmallInteger, nullable=False)
-    scale_pip = Column(SmallInteger, nullable=False)
+    id = db.Column('scale_id', db.Integer, primary_key=True, server_default=db.text("nextval('scale_scale_id_seq'::regclass)"))
+    name = db.Column(db.String(30), nullable=False)
+    scale_dice = db.Column(db.SmallInteger, nullable=False)
+    scale_pip = db.Column(db.SmallInteger, nullable=False)
 
 
-class Skill(Base):
+class Skill(db.Model):
     __tablename__ = 'skill'
 
-    skill_id = Column(Integer, primary_key=True, server_default=text("nextval('skill_skill_id_seq'::regclass)"))
-    attrib_id = Column(ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    has_specializations = Column(SmallInteger, nullable=False, server_default=text("'1'::smallint"))
-    has_abilities = Column(SmallInteger, nullable=False, server_default=text("'0'::smallint"))
+    id = db.Column('skill_id', db.Integer, primary_key=True, server_default=db.text("nextval('skill_skill_id_seq'::regclass)"))
+    attrib_id = db.Column(db.ForeignKey('attribute.attrib_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    has_specializations = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'1'::smallint"))
+    has_abilities = db.Column(db.SmallInteger, nullable=False, server_default=db.text("'0'::smallint"))
 
-    attrib = relationship('Attribute')
+    attribute = db.relationship('Attribute')
 
 
-t_skill_advanced = Table(
-    'skill_advanced', metadata,
-    Column('skill_id', ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('base_skill_id', ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('prereq_dice', SmallInteger, nullable=False),
-    Column('prereq_pip', SmallInteger, nullable=False)
+t_skill_advanced = db.Table(
+    'skill_advanced',
+    db.Column('skill_id', db.ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('base_skill_id', db.ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('prereq_dice', db.SmallInteger, nullable=False),
+    db.Column('prereq_pip', db.SmallInteger, nullable=False)
 )
 
 
-class SkillSpecialization(Base):
+class SkillSpecialization(db.Model):
     __tablename__ = 'skill_specialization'
 
-    specialize_id = Column(Integer, primary_key=True, server_default=text("nextval('skill_specialization_specialize_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    name = Column(String(100), nullable=False)
+    id = db.Column('specialize_id', db.Integer, primary_key=True, server_default=db.text("nextval('skill_specialization_specialize_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
 
-    skill = relationship('Skill')
+    skill = db.relationship('Skill')
 
 
-class Starship(Base):
+class Starship(db.Model):
     __tablename__ = 'starship'
 
-    starship_id = Column(Integer, primary_key=True, server_default=text("nextval('starship_starship_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    scale_id = Column(ForeignKey('scale.scale_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    name = Column(String(100), nullable=False)
-    type = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    length = Column(Float(53), nullable=False)
-    capacity_crew = Column(SmallInteger, nullable=False)
-    capacity_passengers = Column(SmallInteger, nullable=False)
-    capacity_troops = Column(SmallInteger, nullable=False)
-    capacity_cargo = Column(SmallInteger, nullable=False)
-    capacity_consumables = Column(SmallInteger, nullable=False)
-    has_nav_computer = Column(SmallInteger, nullable=False)
-    hyperdrive_multiplier = Column(Float(53), nullable=False)
-    hyperdrive_backup = Column(Float(53), nullable=False)
-    speed_space = Column(SmallInteger, nullable=False)
-    speed_atmosphere_min = Column(SmallInteger, nullable=False)
-    speed_atmosphere_max = Column(SmallInteger, nullable=False)
-    maneuver_dice = Column(SmallInteger, nullable=False)
-    maneuver_pip = Column(SmallInteger, nullable=False)
-    hull_dice = Column(SmallInteger, nullable=False)
-    hull_pip = Column(SmallInteger, nullable=False)
-    shields_dice = Column(SmallInteger, nullable=False)
-    shields_pip = Column(SmallInteger, nullable=False)
-    sensors_passive_range = Column(SmallInteger, nullable=False)
-    sensors_passive_dice = Column(SmallInteger, nullable=False)
-    sensors_passive_pip = Column(SmallInteger, nullable=False)
-    sensors_scan_range = Column(SmallInteger, nullable=False)
-    sensors_scan_dice = Column(SmallInteger, nullable=False)
-    sensors_scan_pip = Column(SmallInteger, nullable=False)
-    sensors_search_range = Column(SmallInteger, nullable=False)
-    sensors_search_dice = Column(SmallInteger, nullable=False)
-    sensors_search_pip = Column(SmallInteger, nullable=False)
-    sensors_focus_range = Column(SmallInteger, nullable=False)
-    sensors_focus_dice = Column(SmallInteger, nullable=False)
-    sensors_focus_pip = Column(SmallInteger, nullable=False)
-    availability = Column(Enum('Common', 'Rare', 'Not For Sale', name='starship_availability'), nullable=False, server_default=text("'Common'::starship_availability"))
-    price_new = Column(Integer)
-    price_used = Column(Integer)
+    id = db.Column('starship_id', db.Integer, primary_key=True, server_default=db.text("nextval('starship_starship_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    scale_id = db.Column(db.ForeignKey('scale.scale_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    length = db.Column(db.Float(53), nullable=False)
+    capacity_crew = db.Column(db.SmallInteger, nullable=False)
+    capacity_passengers = db.Column(db.SmallInteger, nullable=False)
+    capacity_troops = db.Column(db.SmallInteger, nullable=False)
+    capacity_cargo = db.Column(db.SmallInteger, nullable=False)
+    capacity_consumables = db.Column(db.SmallInteger, nullable=False)
+    has_nav_computer = db.Column(db.SmallInteger, nullable=False)
+    hyperdrive_multiplier = db.Column(db.Float(53), nullable=False)
+    hyperdrive_backup = db.Column(db.Float(53), nullable=False)
+    speed_space = db.Column(db.SmallInteger, nullable=False)
+    speed_atmosphere_min = db.Column(db.SmallInteger, nullable=False)
+    speed_atmosphere_max = db.Column(db.SmallInteger, nullable=False)
+    maneuver_dice = db.Column(db.SmallInteger, nullable=False)
+    maneuver_pip = db.Column(db.SmallInteger, nullable=False)
+    hull_dice = db.Column(db.SmallInteger, nullable=False)
+    hull_pip = db.Column(db.SmallInteger, nullable=False)
+    shields_dice = db.Column(db.SmallInteger, nullable=False)
+    shields_pip = db.Column(db.SmallInteger, nullable=False)
+    sensors_passive_range = db.Column(db.SmallInteger, nullable=False)
+    sensors_passive_dice = db.Column(db.SmallInteger, nullable=False)
+    sensors_passive_pip = db.Column(db.SmallInteger, nullable=False)
+    sensors_scan_range = db.Column(db.SmallInteger, nullable=False)
+    sensors_scan_dice = db.Column(db.SmallInteger, nullable=False)
+    sensors_scan_pip = db.Column(db.SmallInteger, nullable=False)
+    sensors_search_range = db.Column(db.SmallInteger, nullable=False)
+    sensors_search_dice = db.Column(db.SmallInteger, nullable=False)
+    sensors_search_pip = db.Column(db.SmallInteger, nullable=False)
+    sensors_focus_range = db.Column(db.SmallInteger, nullable=False)
+    sensors_focus_dice = db.Column(db.SmallInteger, nullable=False)
+    sensors_focus_pip = db.Column(db.SmallInteger, nullable=False)
+    availability = db.Column(db.Enum('Common', 'Rare', 'Not For Sale', name='starship_availability'), nullable=False, server_default=db.text("'Common'::starship_availability"))
+    price_new = db.Column(db.Integer)
+    price_used = db.Column(db.Integer)
 
-    scale = relationship('Scale')
-    skill = relationship('Skill')
+    scale = db.relationship('Scale')
+    skill = db.relationship('Skill')
 
 
-class StarshipWeapon(Base):
+class StarshipWeapon(db.Model):
     __tablename__ = 'starship_weapon'
 
-    starship_weapon_id = Column(BigInteger, primary_key=True, server_default=text("nextval('starship_weapon_starship_weapon_id_seq'::regclass)"))
-    starship_id = Column(ForeignKey('starship.starship_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    type = Column(String(100), nullable=False)
-    number = Column(SmallInteger, nullable=False)
-    crew = Column(SmallInteger, nullable=False)
-    fire_rate = Column(Float(53))
-    fire_control_dice = Column(SmallInteger, nullable=False)
-    fire_control_pip = Column(SmallInteger, nullable=False)
-    fire_arc = Column(ARRAY(ENUM('Above', 'Below', 'Front', 'Back', 'Left', 'Right', name='starship_weapon_fire_arc')), nullable=False)
-    fire_linked = Column(SmallInteger, nullable=False)
-    range_minimum_space = Column(SmallInteger, nullable=False)
-    range_short_space = Column(SmallInteger, nullable=False)
-    range_medium_space = Column(SmallInteger, nullable=False)
-    range_long_space = Column(SmallInteger, nullable=False)
-    range_minimum_atmosphere = Column(SmallInteger, nullable=False)
-    range_short_atmosphere = Column(SmallInteger, nullable=False)
-    range_medium_atmosphere = Column(SmallInteger, nullable=False)
-    range_long_atmosphere = Column(SmallInteger, nullable=False)
-    damage_dice = Column(SmallInteger, nullable=False)
-    damage_pip = Column(SmallInteger, nullable=False)
+    starship_weapon_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('starship_weapon_starship_weapon_id_seq'::regclass)"))
+    starship_id = db.Column(db.ForeignKey('starship.starship_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    type = db.Column(db.String(100), nullable=False)
+    number = db.Column(db.SmallInteger, nullable=False)
+    crew = db.Column(db.SmallInteger, nullable=False)
+    fire_rate = db.Column(db.Float(53))
+    fire_control_dice = db.Column(db.SmallInteger, nullable=False)
+    fire_control_pip = db.Column(db.SmallInteger, nullable=False)
+    fire_arc = db.Column(pg.ARRAY(db.Enum('Above', 'Below', 'Front', 'Back', 'Left', 'Right', name='starship_weapon_fire_arc')), nullable=False)
+    fire_linked = db.Column(db.SmallInteger, nullable=False)
+    range_minimum_space = db.Column(db.SmallInteger, nullable=False)
+    range_short_space = db.Column(db.SmallInteger, nullable=False)
+    range_medium_space = db.Column(db.SmallInteger, nullable=False)
+    range_long_space = db.Column(db.SmallInteger, nullable=False)
+    range_minimum_atmosphere = db.Column(db.SmallInteger, nullable=False)
+    range_short_atmosphere = db.Column(db.SmallInteger, nullable=False)
+    range_medium_atmosphere = db.Column(db.SmallInteger, nullable=False)
+    range_long_atmosphere = db.Column(db.SmallInteger, nullable=False)
+    damage_dice = db.Column(db.SmallInteger, nullable=False)
+    damage_pip = db.Column(db.SmallInteger, nullable=False)
 
-    skill = relationship('Skill')
-    starship = relationship('Starship')
+    skill = db.relationship('Skill')
+    starship = db.relationship('Starship')
 
 
-class Vehicle(Base):
+class Vehicle(db.Model):
     __tablename__ = 'vehicle'
 
-    vehicle_id = Column(Integer, primary_key=True, server_default=text("nextval('vehicle_vehicle_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    scale_id = Column(ForeignKey('scale.scale_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    name = Column(String(100), nullable=False)
-    type = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    cover = Column(Float(53), nullable=False)
-    capacity_crew = Column(SmallInteger, nullable=False)
-    capacity_passengers = Column(SmallInteger, nullable=False)
-    capacity_troops = Column(SmallInteger, nullable=False)
-    capacity_cargo = Column(SmallInteger, nullable=False)
-    capacity_consumables = Column(SmallInteger, nullable=False)
-    speed_min = Column(SmallInteger, nullable=False)
-    speed_max = Column(SmallInteger, nullable=False)
-    altitude_min = Column(SmallInteger, nullable=False)
-    altitude_max = Column(SmallInteger, nullable=False)
-    maneuver_dice = Column(SmallInteger, nullable=False)
-    maneuver_pip = Column(SmallInteger, nullable=False)
-    hull_dice = Column(SmallInteger, nullable=False)
-    hull_pip = Column(SmallInteger, nullable=False)
-    shields_dice = Column(SmallInteger, nullable=False)
-    shields_pip = Column(SmallInteger, nullable=False)
-    availability = Column(Enum('Common', 'Rare', 'Not For Sale', name='vehicle_availability'), nullable=False, server_default=text("'Common'::vehicle_availability"))
-    price_new = Column(Integer)
-    price_used = Column(Integer)
+    id = db.Column('vehicle_id', db.Integer, primary_key=True, server_default=db.text("nextval('vehicle_vehicle_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    scale_id = db.Column(db.ForeignKey('scale.scale_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    cover = db.Column(db.Float(53), nullable=False)
+    capacity_crew = db.Column(db.SmallInteger, nullable=False)
+    capacity_passengers = db.Column(db.SmallInteger, nullable=False)
+    capacity_troops = db.Column(db.SmallInteger, nullable=False)
+    capacity_cargo = db.Column(db.SmallInteger, nullable=False)
+    capacity_consumables = db.Column(db.SmallInteger, nullable=False)
+    speed_min = db.Column(db.SmallInteger, nullable=False)
+    speed_max = db.Column(db.SmallInteger, nullable=False)
+    altitude_min = db.Column(db.SmallInteger, nullable=False)
+    altitude_max = db.Column(db.SmallInteger, nullable=False)
+    maneuver_dice = db.Column(db.SmallInteger, nullable=False)
+    maneuver_pip = db.Column(db.SmallInteger, nullable=False)
+    hull_dice = db.Column(db.SmallInteger, nullable=False)
+    hull_pip = db.Column(db.SmallInteger, nullable=False)
+    shields_dice = db.Column(db.SmallInteger, nullable=False)
+    shields_pip = db.Column(db.SmallInteger, nullable=False)
+    availability = db.Column(db.Enum('Common', 'Rare', 'Not For Sale', name='vehicle_availability'), nullable=False, server_default=db.text("'Common'::vehicle_availability"))
+    price_new = db.Column(db.Integer)
+    price_used = db.Column(db.Integer)
 
-    scale = relationship('Scale')
-    skill = relationship('Skill')
+    scale = db.relationship('Scale')
+    skill = db.relationship('Skill')
 
 
-class VehicleWeapon(Base):
+class VehicleWeapon(db.Model):
     __tablename__ = 'vehicle_weapon'
 
-    vehicle_weapon_id = Column(BigInteger, primary_key=True, server_default=text("nextval('vehicle_weapon_vehicle_weapon_id_seq'::regclass)"))
-    vehicle_id = Column(ForeignKey('vehicle.vehicle_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    type = Column(String(100), nullable=False)
-    number = Column(SmallInteger, nullable=False)
-    crew = Column(SmallInteger, nullable=False)
-    fire_rate = Column(Float(53))
-    fire_control_dice = Column(SmallInteger, nullable=False)
-    fire_control_pip = Column(SmallInteger, nullable=False)
-    fire_arc = Column(ARRAY(ENUM('Above', 'Below', 'Front', 'Back', 'Left', 'Right', name='vehicle_weapon_fire_arc')), nullable=False)
-    fire_linked = Column(SmallInteger, nullable=False)
-    range_minimum = Column(SmallInteger, nullable=False)
-    range_short = Column(SmallInteger, nullable=False)
-    range_medium = Column(SmallInteger, nullable=False)
-    range_long = Column(SmallInteger, nullable=False)
-    damage_dice = Column(SmallInteger, nullable=False)
-    damage_pip = Column(SmallInteger, nullable=False)
+    vehicle_weapon_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('vehicle_weapon_vehicle_weapon_id_seq'::regclass)"))
+    vehicle_id = db.Column(db.ForeignKey('vehicle.vehicle_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    type = db.Column(db.String(100), nullable=False)
+    number = db.Column(db.SmallInteger, nullable=False)
+    crew = db.Column(db.SmallInteger, nullable=False)
+    fire_rate = db.Column(db.Float(53))
+    fire_control_dice = db.Column(db.SmallInteger, nullable=False)
+    fire_control_pip = db.Column(db.SmallInteger, nullable=False)
+    fire_arc = db.Column(pg.ARRAY(db.Enum('Above', 'Below', 'Front', 'Back', 'Left', 'Right', name='vehicle_weapon_fire_arc')), nullable=False)
+    fire_linked = db.Column(db.SmallInteger, nullable=False)
+    range_minimum = db.Column(db.SmallInteger, nullable=False)
+    range_short = db.Column(db.SmallInteger, nullable=False)
+    range_medium = db.Column(db.SmallInteger, nullable=False)
+    range_long = db.Column(db.SmallInteger, nullable=False)
+    damage_dice = db.Column(db.SmallInteger, nullable=False)
+    damage_pip = db.Column(db.SmallInteger, nullable=False)
 
-    skill = relationship('Skill')
-    vehicle = relationship('Vehicle')
+    skill = db.relationship('Skill')
+    vehicle = db.relationship('Vehicle')
 
 
-class WeaponExplosive(Base):
+class WeaponExplosive(db.Model):
     __tablename__ = 'weapon_explosive'
 
-    explosive_id = Column(Integer, primary_key=True, server_default=text("nextval('weapon_explosive_explosive_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    range_minimum = Column(SmallInteger, nullable=False)
-    range_short = Column(SmallInteger, nullable=False)
-    range_medium = Column(SmallInteger, nullable=False)
-    range_long = Column(SmallInteger, nullable=False)
+    id = db.Column('explosive_id', db.Integer, primary_key=True, server_default=db.text("nextval('weapon_explosive_explosive_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    range_minimum = db.Column(db.SmallInteger, nullable=False)
+    range_short = db.Column(db.SmallInteger, nullable=False)
+    range_medium = db.Column(db.SmallInteger, nullable=False)
+    range_long = db.Column(db.SmallInteger, nullable=False)
 
-    skill = relationship('Skill')
+    skill = db.relationship('Skill')
 
 
-t_weapon_explosive_damage = Table(
-    'weapon_explosive_damage', metadata,
-    Column('explosive_id', ForeignKey('weapon_explosive.explosive_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    Column('radius', SmallInteger, nullable=False),
-    Column('damage_dice', SmallInteger, nullable=False),
-    Column('damage_pip', SmallInteger, nullable=False)
+t_weapon_explosive_damage = db.Table(
+    'weapon_explosive_damage',
+    db.Column('explosive_id', db.ForeignKey('weapon_explosive.explosive_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
+    db.Column('radius', db.SmallInteger, nullable=False),
+    db.Column('damage_dice', db.SmallInteger, nullable=False),
+    db.Column('damage_pip', db.SmallInteger, nullable=False)
 )
 
 
-class WeaponMelee(Base):
+class WeaponMelee(db.Model):
     __tablename__ = 'weapon_melee'
 
-    melee_id = Column(Integer, primary_key=True, server_default=text("nextval('weapon_melee_melee_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    damage_dice = Column(SmallInteger, nullable=False)
-    damage_pip = Column(SmallInteger, nullable=False)
-    max_damage_dice = Column(SmallInteger, nullable=False)
-    max_damage_pip = Column(SmallInteger, nullable=False)
+    id = db.Column('melee_id', db.Integer, primary_key=True, server_default=db.text("nextval('weapon_melee_melee_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    damage_dice = db.Column(db.SmallInteger, nullable=False)
+    damage_pip = db.Column(db.SmallInteger, nullable=False)
+    max_damage_dice = db.Column(db.SmallInteger, nullable=False)
+    max_damage_pip = db.Column(db.SmallInteger, nullable=False)
 
-    skill = relationship('Skill')
+    skill = db.relationship('Skill')
 
 
-class WeaponRanged(Base):
+class WeaponRanged(db.Model):
     __tablename__ = 'weapon_ranged'
 
-    ranged_id = Column(Integer, primary_key=True, server_default=text("nextval('weapon_ranged_ranged_id_seq'::regclass)"))
-    skill_id = Column(ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
-    name = Column(String(100), nullable=False)
-    description = Column(Text, nullable=False)
-    fire_rate = Column(Float(53))
-    range_minimum = Column(SmallInteger, nullable=False)
-    range_short = Column(SmallInteger, nullable=False)
-    range_medium = Column(SmallInteger, nullable=False)
-    range_long = Column(SmallInteger, nullable=False)
-    damage_dice = Column(SmallInteger, nullable=False)
-    damage_pip = Column(SmallInteger, nullable=False)
+    id = db.Column('ranged_id', db.Integer, primary_key=True, server_default=db.text("nextval('weapon_ranged_ranged_id_seq'::regclass)"))
+    skill_id = db.Column(db.ForeignKey('skill.skill_id', ondelete='SET NULL', onupdate='RESTRICT'), index=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    fire_rate = db.Column(db.Float(53))
+    range_minimum = db.Column(db.SmallInteger, nullable=False)
+    range_short = db.Column(db.SmallInteger, nullable=False)
+    range_medium = db.Column(db.SmallInteger, nullable=False)
+    range_long = db.Column(db.SmallInteger, nullable=False)
+    damage_dice = db.Column(db.SmallInteger, nullable=False)
+    damage_pip = db.Column(db.SmallInteger, nullable=False)
 
-    skill = relationship('Skill')
+    skill = db.relationship('Skill')

@@ -2,6 +2,8 @@ alembic
 sqlalchemy
 psycopg2
 SQLAlchemy-Utils
-falcon
+Flask-SQLAlchemy
 gunicorn
 oslo.config
+sqlalchemy_jsonapi
+blinker
