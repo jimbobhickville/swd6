@@ -13,17 +13,15 @@ export class RacePage extends React.Component {
       props: { attributes, races }
     } = this;
 
-    if (races.length == 0) {
-      races_section = <div>Loading...</div>;
-    }
-    else {
-      races_section = <RaceTable races={races} attributes={attributes}/>;
+    var racesSection = <div>Loading...</div>;
+    if (this.props.races.length > 0) {
+      racesSection = <RaceTable races={races} attributes={attributes}/>;
     }
 
     return (
       <div className="races">
         <h1>Races</h1>
-        {races_section}
+        {racesSection}
       </div>
     );
   }
@@ -36,15 +34,17 @@ export class RaceTable extends React.Component {
     } = this;
     return (
       <table>
-        <tr>
-          <th>Actions</th>
-          <th>Image</th>
-          <th>Race</th>
-          {attributes.map(attribute => <AttributeHeading attribute={attribute} />)}
-          <th>Height</th>
-          <th>Move</th>
-        </tr>
-        {races.map(race => <RaceRow race={race} attributes={attributes} />)}
+        <tbody>
+          <tr>
+            <th>Actions</th>
+            <th>Image</th>
+            <th>Race</th>
+            {attributes.map(attribute => <AttributeHeading attribute={attribute} key={attribute.id} />)}
+            <th>Height</th>
+            <th>Move</th>
+          </tr>
+          {races.map(race => <RaceRow race={race} attributes={attributes} key={race.name} />)}
+        </tbody>
       </table>
     );
   }
@@ -55,13 +55,14 @@ export class RaceRow extends React.Component {
     const {
       props: { attributes, race }
     } = this;
-    attrib_by_id = race.race_attrib_levels.reduce(attrib_level => ((hash, next) => hash[next.attrib_id] = next), {});
+    console.log(this.props);
+    var attrib_by_id = race.race_attrib_levels.reduce(attrib_level => ((hash, next) => hash[next.attrib_id] = next), {});
     return (
       <tr>
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
         <td>{race.name}</td>
-        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attrib_by_id[attribute.id]} />)}
+        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attrib_by_id[attribute.id]} key={Math.random()} />)}
         <td>{race.min_height}-{race.max_height}m</td>
         <td>{race.min_move_land}-{race.max_move_land}m</td>
       </tr>
@@ -93,8 +94,8 @@ export class RaceAttributeLevel extends React.Component {
 
 const watcher = state => {
   return {
-    races: state.api.races,
-    attributes: state.api.attributes
+    races: state.races,
+    attributes: state.attributes
   };
 };
 const dispatcher = (dispatch) => {
@@ -106,5 +107,4 @@ const dispatcher = (dispatch) => {
   }
 };
 
-const RaceConnector = connect(watcher, dispatcher)(RacePage);
-export default RaceConnector;
+export const RaceConnector = connect(watcher, dispatcher)(RacePage);

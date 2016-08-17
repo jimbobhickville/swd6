@@ -12,7 +12,7 @@ import { Home } from './home';
 import { About } from './about';
 import { RaceConnector } from './races';
 
-let store = createStore(reducer);
+let store = createStore(reducer, {});
 
 /* TODO: configurable API endpoint */
 setEndpointHost('http://localhost:8080');
