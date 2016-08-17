@@ -93,8 +93,8 @@ export class RaceAttributeLevel extends React.Component {
 
 const watcher = state => {
   return {
-    races: state.races,
-    attributes: state.attributes
+    races: state.api.races,
+    attributes: state.api.attributes
   };
 };
 const dispatcher = (dispatch) => {

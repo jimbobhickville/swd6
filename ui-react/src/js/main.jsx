@@ -4,15 +4,15 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Router, Route, Link, browserHistory } from 'react-router'
 import { Provider } from 'react-redux'
-import { createStore } from 'redux'
-import { setEndpointHost, setEndpointPath } from 'redux-json-api'
+import { createStore, combineReducers } from 'redux'
+import { setEndpointHost, setEndpointPath, reducer } from 'redux-json-api'
 
 import { App } from './app';
 import { Home } from './home';
 import { About } from './about';
 import { RaceConnector } from './races';
 
-let store = createStore(App);
+let store = createStore(reducer);
 
 /* TODO: configurable API endpoint */
 setEndpointHost('http://localhost:8080');
