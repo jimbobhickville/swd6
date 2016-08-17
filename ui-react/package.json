@@ -4,7 +4,7 @@
   "description": "Online character builder for the old West-End Games D6 version of Star Wars the Roleplaying Game.",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --content-base dist",
+    "start": "webpack-dev-server --history-api-fallback --content-base dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "react": "^15.3.0",
-    "react-dom": "^15.3.0"
+    "react-dom": "^15.3.0",
+    "react-router": "^2.6.1"
   }
 }
