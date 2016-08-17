@@ -13,17 +13,17 @@ services:
       - '8080:8080'
     volumes:
       - ./api:/opt/swd6/api
-  ui:
-    build:
-      context: ./ui
-    environment:
-      - UI_PORT=9090
-    links:
-      - api
-    ports:
-      - '9090:9090'
-    volumes:
-      - ./ui:/opt/swd6/ui
+#  ui:
+#    build:
+#      context: ./ui
+#    environment:
+#      - UI_PORT=9090
+#    links:
+#      - api
+#    ports:
+#      - '9090:9090'
+#    volumes:
+#      - ./ui:/opt/swd6/ui
   db:
     image: postgres
     ports:
