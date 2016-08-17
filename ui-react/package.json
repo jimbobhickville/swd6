@@ -1,0 +1,34 @@
+{
+  "name": "swd6",
+  "version": "1.0.0",
+  "description": "Online character builder for the old West-End Games D6 version of Star Wars the Roleplaying Game.",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --content-base dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/swd6/swd6.git"
+  },
+  "author": "Caige Nichols <caigesn@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/swd6/swd6/issues"
+  },
+  "homepage": "https://gitlab.com/swd6/swd6#README",
+  "devDependencies": {
+    "babel-core": "^6.13.2",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.13.2",
+    "babel-preset-react": "^6.11.1",
+    "css-loader": "^0.23.1",
+    "style-loader": "^0.13.1",
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "^1.14.1"
+  },
+  "dependencies": {
+    "react": "^15.3.0",
+    "react-dom": "^15.3.0"
+  }
+}
