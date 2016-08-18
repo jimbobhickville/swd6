@@ -3,9 +3,11 @@ import { connect } from 'react-redux';
 import { readEndpoint } from 'redux-json-api';
 
 
-export class RacePage extends React.Component {
+export class RaceSection extends React.Component {
   componentDidMount() {
-    this.props.onLoad();
+    const { dispatch } = this.props;
+    dispatch(readEndpoint('attributes'));
+    dispatch(readEndpoint('races'));
   }
 
   render() {
@@ -13,15 +15,15 @@ export class RacePage extends React.Component {
       props: { attributes, races }
     } = this;
 
-    var racesSection = <div>Loading...</div>;
+    var raceSectionContent = <div>Loading...</div>;
     if (races && races.length > 0) {
-      racesSection = <RaceTable races={races} attributes={attributes}/>;
+      raceSectionContent = <RaceTable races={races} attributes={attributes}/>;
     }
 
     return (
       <div className="races">
         <h1>Races</h1>
-        {racesSection}
+        {raceSectionContent}
       </div>
     );
   }
@@ -92,19 +94,4 @@ export class RaceAttributeLevel extends React.Component {
   }
 }
 
-const watcher = state => {
-  return {
-    races: state.races,
-    attributes: state.attributes
-  };
-};
-const dispatcher = (dispatch) => {
-  return {
-    onLoad: () => {
-      dispatch(readEndpoint('attributes'));
-      dispatch(readEndpoint('races'));
-    }
-  }
-};
-
-export const RaceConnector = connect(watcher, dispatcher)(RacePage);
+export const RacePage = connect()(RaceSection);

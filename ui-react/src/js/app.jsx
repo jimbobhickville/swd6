@@ -1,8 +1,14 @@
 import React from 'react';
-
+import { connect } from 'react-redux';
 import { IndexLink, Link } from 'react-router';
+import { setEndpointHost, setEndpointPath } from 'redux-json-api'
 
-export class App extends React.Component {
+export class AppWrapper extends React.Component {
+  componentWillMount() {
+    const { dispatch } = this.props;
+    dispatch(setEndpointHost('http://localhost:8080'));
+    dispatch(setEndpointPath('/api'));
+  }
   render() {
     return (
       <div className="swd6">
@@ -16,4 +22,6 @@ export class App extends React.Component {
       </div>
     );
   }
-}
+};
+
+export const App = connect()(AppWrapper);
