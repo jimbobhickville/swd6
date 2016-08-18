@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { readEndpoint } from 'redux-json-api';
 
 
-export class RaceSection extends React.Component {
+export class RaceTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(readEndpoint('attributes'));
@@ -15,42 +15,27 @@ export class RaceSection extends React.Component {
       props: { attributes, races }
     } = this;
 
-    var raceSectionContent = <div>Loading...</div>;
-    if (races && races.length > 0) {
-      raceSectionContent = <RaceTable races={races} attributes={attributes}/>;
-    }
-
     return (
       <div className="races">
         <h1>Races</h1>
-        {raceSectionContent}
-      </div>
-    );
-  }
-}
-
-export class RaceTable extends React.Component {
-  render() {
-    const {
-      props: { attributes, races }
-    } = this;
-    return (
-      <table>
-        <tbody>
+        <table>
+          <tbody>
           <tr>
             <th>Actions</th>
             <th>Image</th>
             <th>Race</th>
-            {attributes.map(attribute => <AttributeHeading attribute={attribute} key={attribute.id} />)}
+            {attributes.map(attribute => <th>{attribute.name}</th>)}
             <th>Height</th>
             <th>Move</th>
           </tr>
-          {races.map(race => <RaceRow race={race} attributes={attributes} key={race.name} />)}
-        </tbody>
-      </table>
+          {races.map(race => <RaceRow race={race} attributes={attributes} key={race.id} />)}
+          </tbody>
+        </table>
+      </div>
     );
   }
 }
+RaceTable.defaultProps = {races: [], attributes: []};
 
 export class RaceRow extends React.Component {
   render() {
@@ -64,22 +49,11 @@ export class RaceRow extends React.Component {
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
         <td>{race.name}</td>
-        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attrib_by_id[attribute.id]} key={Math.random()} />)}
+        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attrib_by_id[attribute.id]} key={attribute.id} />)}
         <td>{race.min_height}-{race.max_height}m</td>
         <td>{race.min_move_land}-{race.max_move_land}m</td>
       </tr>
     );
-  }
-}
-
-export class AttributeHeading extends React.Component {
-  render() {
-    const {
-      props: { attribute }
-    } = this;
-    return (
-      <th>{attribute.name}</th>
-    )
   }
 }
 
@@ -94,4 +68,4 @@ export class RaceAttributeLevel extends React.Component {
   }
 }
 
-export const RacePage = connect()(RaceSection);
+export const RacePage = connect()(RaceTable);
