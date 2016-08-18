@@ -14,7 +14,7 @@ export class RacePage extends React.Component {
     } = this;
 
     var racesSection = <div>Loading...</div>;
-    if (this.props.races.length > 0) {
+    if (races && races.length > 0) {
       racesSection = <RaceTable races={races} attributes={attributes}/>;
     }
 
