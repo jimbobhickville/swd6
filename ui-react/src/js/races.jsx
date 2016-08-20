@@ -2,12 +2,13 @@ import React from 'react';
 import { readEndpoint } from 'redux-json-api';
 
 import { jsonApiConnect } from './jsonapi'
+import { Level } from './util'
 
 export class RaceTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(readEndpoint('attributes?sort=name'));
-    dispatch(readEndpoint('races?sort=name'));
+    dispatch(readEndpoint('races?sort=name&include=attributes'));
   }
 
   render() {
@@ -36,15 +37,14 @@ RaceTable.defaultProps = {races: [], attributes: []};
 export class RaceRow extends React.Component {
   render() {
     const {
-      props: { attributes, race }
+      props: { race }
     } = this;
-    var attribLevel = {min_dice: 2, max_dice: 4};
     return (
       <tr>
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
         <td>{race.attributes.name}</td>
-        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attribLevel} key={attribute.id} />)}
+        {race.relationships.attributes.data.map(attribute => <RaceAttributeLevel attribute_level={attribute} key={attribute.id} />)}
         <td>{race.attributes['min-height']}-{race.attributes['max-height']}m</td>
         <td>{race.attributes['min-move-land']}-{race.attributes['max-move-land']}m</td>
       </tr>
@@ -55,10 +55,14 @@ export class RaceRow extends React.Component {
 export class RaceAttributeLevel extends React.Component {
   render() {
     const {
-      props: { attrib_level }
+      props: { attribute_level }
     } = this;
     return (
-      <td>{attrib_level.min_dice}D/{attrib_level.max_dice}D</td>
+      <td>
+        <Level level={attribute_level.attributes.min_level} key={attribute_level.attributes.min_level} />
+        /
+        <Level level={attribute_level.attributes.max_level} key={attribute_level.attributes.max_level} />
+      </td>
     )
   }
 }
