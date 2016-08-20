@@ -1,0 +1,228 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+drop table modifier;
+drop table character_skill_level;
+
+drop index idx_16565_attrib_id;
+drop index idx_16565_race_id;
+drop index idx_16565_race_id_2;
+
+alter table race alter column min_height type numeric(3, 1) using min_height::numeric;
+alter table race alter column max_height type numeric(3, 1) using max_height::numeric;
+alter table race add column attribute_level numeric(3, 1);
+update race set attribute_level = (attribute_dice + attribute_pip / 10)::numeric;
+alter table race alter column attribute_level set not null;
+alter table race alter column attribute_level set default 12.0;
+alter table race drop column attribute_dice;
+alter table race drop column attribute_pip;
+
+alter table skill_advanced add column prerequisite_level numeric(3, 1);
+update skill_advanced set prerequisite_level = (prereq_dice + prereq_pip / 10)::numeric;
+alter table skill_advanced alter column prerequisite_level set not null;
+alter table skill_advanced alter column prerequisite_level set default 5.0;
+alter table skill_advanced drop column prereq_dice;
+alter table skill_advanced drop column prereq_pip;
+
+alter table race_attrib_levels rename to race_attribute;
+
+alter table race_attribute add column min_level numeric(3, 1);
+update race_attribute set min_level = (min_dice + min_pip / 10)::numeric;
+alter table race_attribute alter column min_level set not null;
+alter table race_attribute alter column min_level set default 2.0;
+alter table race_attribute drop column min_dice;
+alter table race_attribute drop column min_pip;
+
+alter table race_attribute add column max_level numeric(3, 1);
+update race_attribute set max_level = (max_dice + max_pip / 10)::numeric;
+alter table race_attribute alter column max_level set not null;
+alter table race_attribute alter column max_level set default 4.0;
+alter table race_attribute drop column max_dice;
+alter table race_attribute drop column max_pip;
+
+alter table character_sheet drop constraint character_sheet_ibfk_1;
+alter table character_sheet drop constraint character_sheet_ibfk_2;
+alter table race_attribute drop constraint race_attrib_levels_ibfk_1;
+alter table race drop constraint race_ibfk_1;
+alter table skill drop constraint skill_ibfk_1;
+alter table skill_advanced drop constraint skill_advanced_ibfk_1;
+alter table skill_advanced drop constraint skill_advanced_ibfk_2;
+alter table skill_specialization drop constraint skill_specialization_ibfk_1;
+alter table starship drop constraint starship_ibfk_1;
+alter table starship_weapon drop constraint starship_weapon_ibfk_2;
+alter table vehicle drop constraint vehicle_ibfk_1;
+alter table vehicle_weapon drop constraint vehicle_weapon_ibfk_2;
+alter table weapon_explosive drop constraint weapon_explosive_ibfk_1;
+alter table weapon_melee drop constraint weapon_melee_ibfk_1;
+alter table weapon_ranged drop constraint weapon_ranged_ibfk_1;
+
+alter table planet add column id uuid;
+alter table planet alter column id set default uuid_generate_v4();
+update planet set id=uuid_generate_v4();
+alter table planet alter column id set not null;
+
+alter table skill add column id uuid;
+alter table skill alter column id set default uuid_generate_v4();
+update skill set id=uuid_generate_v4();
+alter table skill alter column id set not null;
+
+alter table race add column id uuid;
+alter table race alter column id set default uuid_generate_v4();
+update race set id=uuid_generate_v4();
+alter table race alter column id set not null;
+
+alter table skill_advanced add column id uuid;
+alter table skill_advanced alter column id set default uuid_generate_v4();
+update skill_advanced set id=uuid_generate_v4();
+alter table skill_advanced alter column id set not null;
+
+alter table skill_specialization add column id uuid;
+alter table skill_specialization alter column id set default uuid_generate_v4();
+update skill_specialization set id=uuid_generate_v4();
+alter table skill_specialization alter column id set not null;
+
+alter table attribute rename column abbreviation to id;
+
+alter table race_attribute add column race_uuid uuid;
+update race_attribute set race_uuid = (select id from race where race.race_id=race_attribute.race_id);
+alter table race_attribute alter column race_uuid set not null;
+alter table race_attribute drop column race_id;
+alter table race_attribute rename column race_uuid to race_id;
+
+alter table race add column planet_uuid uuid;
+update race set planet_uuid = (select id from planet where planet.planet_id=race.planet_id);
+alter table race drop column planet_id;
+alter table race rename column planet_uuid to planet_id;
+
+alter table race_attribute add column attribute_id character(3);
+update race_attribute set attribute_id = (select id from attribute where attribute.attrib_id=race_attribute.attrib_id);
+alter table race_attribute alter column attribute_id set not null;
+alter table race_attribute drop column attrib_id;
+
+alter table skill add column attribute_id character(3);
+update skill set attribute_id = (select id from attribute where attribute.attrib_id=skill.attrib_id);
+alter table skill alter column attribute_id set not null;
+alter table skill drop column attrib_id;
+
+create table force_power (
+  id uuid NOT NULL default uuid_generate_v4() PRIMARY KEY,
+  name character varying(100) NOT NULL,
+  skill_id integer,
+  description text NOT NULL
+);
+
+insert into force_power (skill_id, name, description) select skill_id, name, description from skill where attribute_id='For';
+
+alter table ability rename to force_ability;
+alter table force_ability add force_power_id uuid;
+update force_ability set force_power_id = (select fp.id from force_power fp where fp.skill_id=force_ability.skill_id);
+
+alter table force_ability add column id uuid;
+alter table force_ability alter column id set default uuid_generate_v4();
+update force_ability set id=uuid_generate_v4();
+alter table force_ability alter column id set not null;
+
+alter table ability_prerequisite rename to force_ability_prerequisite;
+alter table force_ability_prerequisite add force_ability_id uuid;
+alter table force_ability_prerequisite add prerequisite_id uuid;
+update force_ability_prerequisite set force_ability_id = (
+  select fa.id from force_ability fa where fa.ability_id=force_ability_prerequisite.ability_id);
+update force_ability_prerequisite set prerequisite_id = (
+  select fa.id from force_ability fa where fa.ability_id=force_ability_prerequisite.prereq_ability_id);
+drop index idx_16395_ability_id;
+drop index idx_16395_prereq_ability_id;
+alter table force_ability_prerequisite drop column ability_id;
+alter table force_ability_prerequisite drop column prereq_ability_id;
+
+alter table force_ability drop constraint idx_16388_primary;
+alter table force_ability drop column ability_id;
+alter table force_ability add primary key (id);
+
+alter table force_power drop column skill_id;
+
+alter table force_ability_prerequisite add column id uuid;
+alter table force_ability_prerequisite alter column id set default uuid_generate_v4();
+update force_ability_prerequisite set id=uuid_generate_v4();
+alter table force_ability_prerequisite alter column id set not null;
+alter table force_ability_prerequisite add primary key (id);
+alter table force_ability_prerequisite add unique (force_ability_id, prerequisite_id);
+
+alter table force_ability drop column skill_id;
+
+alter table skill_specialization add column skill_uuid uuid;
+update skill_specialization set skill_uuid = (select id from skill where skill.skill_id=skill_specialization.skill_id);
+alter table skill_specialization drop column skill_id;
+alter table skill_specialization rename column skill_uuid to skill_id;
+
+alter table skill_advanced add column skill_uuid uuid;
+update skill_advanced set skill_uuid = (select id from skill where skill.skill_id=skill_advanced.skill_id);
+alter table skill_advanced drop column skill_id;
+alter table skill_advanced rename column skill_uuid to skill_id;
+
+alter table skill_advanced add column base_skill_uuid uuid;
+update skill_advanced set base_skill_uuid = (select id from skill where skill.skill_id=skill_advanced.base_skill_id);
+alter table skill_advanced drop column base_skill_id;
+alter table skill_advanced rename column base_skill_uuid to base_skill_id;
+
+alter table race drop constraint idx_16547_primary;
+alter table race drop column race_id;
+alter table race add primary key (id);
+
+alter table attribute drop constraint idx_16451_primary;
+alter table attribute drop column attrib_id;
+alter table attribute add primary key (id);
+
+alter table planet drop constraint idx_16522_primary;
+alter table planet drop column planet_id;
+alter table planet add primary key (id);
+
+alter table skill drop constraint idx_16578_primary;
+alter table skill drop column skill_id;
+alter table skill add primary key (id);
+alter table skill_advanced add primary key (id);
+
+alter table skill_specialization drop constraint idx_16592_primary;
+alter table skill_specialization drop column specialize_id;
+alter table skill_specialization add primary key (id);
+
+alter table race add foreign key (planet_id) references planet(id) on delete restrict on update cascade;
+alter table race_attribute add foreign key (race_id) references race(id) on delete cascade on update cascade;
+alter table race_attribute add foreign key (attribute_id) references attribute(id) on delete restrict on update cascade;
+
+alter table skill add foreign key (attribute_id) references attribute(id) on delete restrict on update cascade;
+alter table skill_advanced add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table skill_advanced add foreign key (base_skill_id) references skill(id) on delete restrict on update cascade;
+alter table skill_specialization add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+
+alter table character_sheet alter column race_id type uuid using uuid_generate_v4();
+alter table character_sheet add foreign key (race_id) references race(id) on delete restrict on update cascade;
+alter table character_sheet alter column planet_id type uuid using uuid_generate_v4();
+alter table character_sheet add foreign key (planet_id) references planet(id) on delete restrict on update cascade;
+
+alter table starship alter column skill_id type uuid using uuid_generate_v4();
+alter table starship add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table starship_weapon alter column skill_id type uuid using uuid_generate_v4();
+alter table starship_weapon add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table vehicle alter column skill_id type uuid using uuid_generate_v4();
+alter table vehicle add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table vehicle_weapon alter column skill_id type uuid using uuid_generate_v4();
+alter table vehicle_weapon add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table weapon_explosive alter column skill_id type uuid using uuid_generate_v4();
+alter table weapon_explosive add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table weapon_melee alter column skill_id type uuid using uuid_generate_v4();
+alter table weapon_melee add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+alter table weapon_ranged alter column skill_id type uuid using uuid_generate_v4();
+alter table weapon_ranged add foreign key (skill_id) references skill(id) on delete restrict on update cascade;
+
+alter table race_attribute add column id uuid;
+alter table race_attribute alter column id set default uuid_generate_v4();
+update race_attribute set id=uuid_generate_v4();
+alter table race_attribute alter column id set not null;
+alter table race_attribute add primary key (id);
+alter table race_attribute add unique (race_id, attribute_id);
+
+delete from skill where attribute_id='For';
+alter table skill drop column has_abilities;
+
+delete from attribute where id='For';
+alter table attribute drop column has_level;
+
