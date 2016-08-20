@@ -1,20 +1,16 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import { readEndpoint } from 'redux-json-api';
 
+import { jsonApiConnect } from './jsonapi'
 
 export class RaceTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(readEndpoint('attributes'));
-    dispatch(readEndpoint('races'));
+    dispatch(readEndpoint('attributes?sort=name'));
+    dispatch(readEndpoint('races?sort=name'));
   }
 
   render() {
-    const {
-      props: { attributes, races }
-    } = this;
-
     return (
       <div className="races">
         <h1>Races</h1>
@@ -24,11 +20,11 @@ export class RaceTable extends React.Component {
             <th>Actions</th>
             <th>Image</th>
             <th>Race</th>
-            {attributes.map(attribute => <th>{attribute.name}</th>)}
+            {this.props.attributes.map(attribute => <th key={attribute.id}>{attribute.attributes.name}</th>)}
             <th>Height</th>
             <th>Move</th>
           </tr>
-          {races.map(race => <RaceRow race={race} attributes={attributes} key={race.id} />)}
+          {this.props.races.map(race => <RaceRow race={race} attributes={this.props.attributes} key={race.id} />)}
           </tbody>
         </table>
       </div>
@@ -42,16 +38,15 @@ export class RaceRow extends React.Component {
     const {
       props: { attributes, race }
     } = this;
-    console.log(this.props);
-    var attrib_by_id = race.race_attrib_levels.reduce(attrib_level => ((hash, next) => hash[next.attrib_id] = next), {});
+    var attribLevel = {min_dice: 2, max_dice: 4};
     return (
       <tr>
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
-        <td>{race.name}</td>
-        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attrib_by_id[attribute.id]} key={attribute.id} />)}
-        <td>{race.min_height}-{race.max_height}m</td>
-        <td>{race.min_move_land}-{race.max_move_land}m</td>
+        <td>{race.attributes.name}</td>
+        {attributes.map(attribute => <RaceAttributeLevel attrib_level={attribLevel} key={attribute.id} />)}
+        <td>{race.attributes['min-height']}-{race.attributes['max-height']}m</td>
+        <td>{race.attributes['min-move-land']}-{race.attributes['max-move-land']}m</td>
       </tr>
     );
   }
@@ -63,9 +58,9 @@ export class RaceAttributeLevel extends React.Component {
       props: { attrib_level }
     } = this;
     return (
-      <th>{attrib_level.min_dice}D/{attrib_level.max_dice}D</th>
+      <td>{attrib_level.min_dice}D/{attrib_level.max_dice}D</td>
     )
   }
 }
 
-export const RacePage = connect()(RaceTable);
+export const RacePage = jsonApiConnect(RaceTable);
