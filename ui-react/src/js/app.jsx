@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { IndexLink, Link } from 'react-router';
-import { setEndpointHost, setEndpointPath } from 'redux-json-api'
+import { setEndpointHost, setEndpointPath } from 'redux-json-api';
 
 export class AppWrapper extends React.Component {
   componentWillMount() {
@@ -22,6 +22,6 @@ export class AppWrapper extends React.Component {
       </div>
     );
   }
-};
+}
 
 export const App = connect()(AppWrapper);

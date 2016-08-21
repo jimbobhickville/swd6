@@ -1,8 +1,8 @@
 import React from 'react';
 import { readEndpoint } from 'redux-json-api';
 
-import { jsonApiConnect } from './jsonapi'
-import { Level } from './util'
+import { jsonApiConnect } from './jsonapi';
+import { Level } from './util';
 
 export class RaceTable extends React.Component {
   componentDidMount() {
@@ -17,14 +17,14 @@ export class RaceTable extends React.Component {
         <h1>Races</h1>
         <table>
           <tbody>
-          <tr>
-            <th>Actions</th>
-            <th>Image</th>
-            <th>Race</th>
-            {this.props.attributes.map(attribute => <th key={attribute.id}>{attribute.attributes.name}</th>)}
-            <th>Height</th>
-            <th>Move</th>
-          </tr>
+            <tr>
+              <th>Actions</th>
+              <th>Image</th>
+              <th>Race</th>
+              {this.props.attributes.map(attribute => <th key={attribute.id}>{attribute.attributes.name}</th>)}
+              <th>Height</th>
+              <th>Move</th>
+            </tr>
           {this.props.races.map(race => <RaceRow race={race} attributes={this.props.attributes} key={race.id} />)}
           </tbody>
         </table>
@@ -32,7 +32,8 @@ export class RaceTable extends React.Component {
     );
   }
 }
-RaceTable.defaultProps = {races: [], attributes: []};
+
+RaceTable.defaultProps = { races: [], attributes: [] };
 
 export class RaceRow extends React.Component {
   render() {
@@ -63,7 +64,7 @@ export class RaceAttributeLevel extends React.Component {
         /
         <Level level={attribute_level.attributes.max_level} key={attribute_level.attributes.max_level} />
       </td>
-    )
+    );
   }
 }
 

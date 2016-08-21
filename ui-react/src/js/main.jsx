@@ -1,11 +1,11 @@
-require("!style!css!../css/styles.css");
+require('!style!css!../css/styles.css');
 
 import React from 'react';
 import { render } from 'react-dom';
-import { Provider } from 'react-redux'
-import { Router, Route, Link, browserHistory } from 'react-router'
-import { createStore, combineReducers, applyMiddleware } from 'redux'
-import { reducer as api } from 'redux-json-api'
+import { Provider } from 'react-redux';
+import { Router, Route, browserHistory } from 'react-router';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { reducer as api } from 'redux-json-api';
 import thunk from 'redux-thunk';
 
 import { About } from './about';
@@ -13,7 +13,7 @@ import { App } from './app';
 import { Home } from './home';
 import { RacePage } from './races';
 
-let reducers = combineReducers({
+const reducers = combineReducers({
   api
 });
 let store = createStore(reducers, applyMiddleware(thunk));

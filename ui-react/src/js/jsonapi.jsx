@@ -1,16 +1,16 @@
 import { connect } from 'react-redux';
 
 
-export const jsonApiConnect = function(componentClass) {
+export const jsonApiConnect = function jsonApiConnect(componentClass) {
   function mapStateToProps(state) {
     var myProps = {};
-    for (var key in componentClass.defaultProps){
+    Object.keys(componentClass.defaultProps).forEach((key) => {
       if (state.api && state.api[key]) {
         myProps[key] = state.api[key].data;
       } else {
         myProps[key] = componentClass.defaultProps[key];
       }
-    }
+    });
     return myProps;
   }
   return connect(mapStateToProps)(componentClass);
