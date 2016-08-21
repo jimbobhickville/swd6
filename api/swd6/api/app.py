@@ -22,31 +22,4 @@ logging.getLogger('flask_cors').level = logging.DEBUG
 
 db.init_app(app)
 
-import json
-import uuid
-import datetime
-import decimal
-
-class JSONAPIEncoder(json.JSONEncoder):
-    """ JSONEncoder Implementation that allows for UUID and datetime """
-
-    def default(self, value):
-        """
-        Handle UUID, datetime, decimal, and callables.
-
-        :param value: Value to encode
-        """
-        if isinstance(value, uuid.UUID):
-            return str(value)
-        elif isinstance(value, datetime.datetime):
-            return value.isoformat()
-        elif isinstance(value, decimal.Decimal):
-            return str(value)
-        elif callable(value):
-            return str(value)
-        return json.JSONEncoder.default(self, value)
-
-flask_jsonapi.FlaskJSONAPI.json_encoder = JSONAPIEncoder
-
-
 api = flask_jsonapi.FlaskJSONAPI(app, db)
