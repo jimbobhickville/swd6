@@ -13,11 +13,15 @@ export class RaceTable extends React.Component {
 
   render() {
     const {
-      props: { races, attributes }
+      props: { races, attributes, race_attributes }
     } = this;
     console.log(this.props);
-    const raceAttributeMap = this.props['race-attributes'].data.reduce((partialMap, raceAttribute) => {
-      partialMap[raceAttribute.attributes['race-id']][raceAttribute.attributes['attribute-id']] = raceAttribute;
+    const raceAttributeMap = race_attributes.data.reduce((partialMap, raceAttribute) => {
+      if (! partialMap[raceAttribute.attributes.race_id]) {
+        partialMap[raceAttribute.attributes.race_id] = {};
+      }
+      partialMap[raceAttribute.attributes.race_id][raceAttribute.attributes.attribute_id] = raceAttribute;
+      return partialMap;
     }, {});
     const attributeOrder = attributes.data.map(attribute => attribute.id);
     return (
@@ -41,25 +45,28 @@ export class RaceTable extends React.Component {
   }
 }
 
-RaceTable.defaultProps = { races: { data: [] }, attributes: { data: [] }, 'race-attributes': { data: [] } };
+RaceTable.defaultProps = { races: { data: [] }, attributes: { data: [] }, race_attributes: { data: [] } };
 
 export class RaceRow extends React.Component {
   render() {
     const {
       props: { race, attributeOrder, raceAttributes }
     } = this;
-    const raceAttributeMap = race.relationships.attributes.data.reduce((partialMap, attribute) => {
-      partialMap[attribute.id] = raceAttributes[race.id][attribute.id];
-    }, {});
+    var raceAttributeColumns;
+    if (raceAttributes[race.id]) {
+      raceAttributeColumns = attributeOrder.map(attributeId => <RaceAttributeLevel raceAttribute={raceAttributes[race.id][attributeId]} key={attributeId} />)
+    } else {
+      raceAttributeColumns = attributeOrder.map(attributeId => <td key={attributeId}> </td>)
+    }
 
     return (
       <tr>
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
         <td>{race.attributes.name}</td>
-        {attributeOrder.map(attributeId => <RaceAttributeLevel raceAttribute={raceAttributeMap[attributeId]} key={attributeId} />)}
-        <td>{race.attributes['min-height']}-{race.attributes['max-height']}m</td>
-        <td>{race.attributes['min-move-land']}-{race.attributes['max-move-land']}m</td>
+        {raceAttributeColumns}
+        <td>{race.attributes.min_height}-{race.attributes.max_height}m</td>
+        <td>{race.attributes.min_move_land}-{race.attributes.max_move_land}m</td>
       </tr>
     );
   }
@@ -72,9 +79,9 @@ export class RaceAttributeLevel extends React.Component {
     } = this;
     return (
       <td>
-        <Level level={raceAttribute.attributes['min-level']} key={raceAttribute.attributes['min-level']} />
+        <Level level={raceAttribute.attributes.min_level} />
         /
-        <Level level={raceAttribute.attributes['max_level']} key={raceAttribute.attributes['max_level']} />
+        <Level level={raceAttribute.attributes.max_level} />
       </td>
     );
   }
