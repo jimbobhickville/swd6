@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 drop table modifier;
 drop table character_skill_level;
+drop table character_armor;
 
 drop index idx_16565_attrib_id;
 drop index idx_16565_race_id;
@@ -69,6 +70,24 @@ alter table race add column id uuid;
 alter table race alter column id set default uuid_generate_v4();
 update race set id=uuid_generate_v4();
 alter table race alter column id set not null;
+
+alter table armor add column id uuid;
+alter table armor alter column id set default uuid_generate_v4();
+update armor set id=uuid_generate_v4();
+alter table armor alter column id set not null;
+
+alter table image add item_id uuid;
+update image set mod_name='race', item_id=(select id from race where race_id=image.id) where mod_name='Race';
+update image set mod_name='armor', item_id=(select id from armor where armor_id=image.id) where mod_name='Armor';
+update image set mod_name='planet', item_id=(select id from planet where planet_id=image.id) where mod_name='Planet';
+alter table image alter column item_id set not null;
+
+alter table image drop column id;
+
+alter table image add column id uuid;
+alter table image alter column id set default uuid_generate_v4();
+update image set id=uuid_generate_v4();
+alter table image alter column id set not null;
 
 alter table skill_advanced add column id uuid;
 alter table skill_advanced alter column id set default uuid_generate_v4();
@@ -166,6 +185,13 @@ alter table skill_advanced rename column base_skill_uuid to base_skill_id;
 alter table race drop constraint idx_16547_primary;
 alter table race drop column race_id;
 alter table race add primary key (id);
+
+alter table image rename column mod_name to item_type;
+alter table image drop column image_id;
+alter table image add primary key (id);
+
+alter table armor drop column armor_id;
+alter table armor add primary key (id);
 
 alter table attribute drop constraint idx_16451_primary;
 alter table attribute drop column attrib_id;
