@@ -6,7 +6,7 @@ export const jsonApiConnect = function jsonApiConnect(componentClass) {
     var myProps = {};
     Object.keys(componentClass.defaultProps).forEach((key) => {
       if (state.api && state.api[key]) {
-        myProps[key] = state.api[key].data;
+        myProps[key] = state.api[key];
       } else {
         myProps[key] = componentClass.defaultProps[key];
       }

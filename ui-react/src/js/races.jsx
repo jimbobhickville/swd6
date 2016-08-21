@@ -12,6 +12,14 @@ export class RaceTable extends React.Component {
   }
 
   render() {
+    const {
+      props: { races, attributes }
+    } = this;
+    console.log(this.props);
+    const raceAttributeMap = this.props['race-attributes'].data.reduce((partialMap, raceAttribute) => {
+      partialMap[raceAttribute.attributes['race-id']][raceAttribute.attributes['attribute-id']] = raceAttribute;
+    }, {});
+    const attributeOrder = attributes.data.map(attribute => attribute.id);
     return (
       <div className="races">
         <h1>Races</h1>
@@ -21,11 +29,11 @@ export class RaceTable extends React.Component {
               <th>Actions</th>
               <th>Image</th>
               <th>Race</th>
-              {this.props.attributes.map(attribute => <th key={attribute.id}>{attribute.attributes.name}</th>)}
+              {attributes.data.map(attribute => <th key={attribute.id}>{attribute.attributes.name}</th>)}
               <th>Height</th>
               <th>Move</th>
             </tr>
-          {this.props.races.map(race => <RaceRow race={race} attributes={this.props.attributes} key={race.id} />)}
+          {races.data.map(race => <RaceRow race={race} attributeOrder={attributeOrder} raceAttributes={raceAttributeMap} key={race.id} />)}
           </tbody>
         </table>
       </div>
@@ -33,19 +41,23 @@ export class RaceTable extends React.Component {
   }
 }
 
-RaceTable.defaultProps = { races: [], attributes: [] };
+RaceTable.defaultProps = { races: { data: [] }, attributes: { data: [] }, 'race-attributes': { data: [] } };
 
 export class RaceRow extends React.Component {
   render() {
     const {
-      props: { race }
+      props: { race, attributeOrder, raceAttributes }
     } = this;
+    const raceAttributeMap = race.relationships.attributes.data.reduce((partialMap, attribute) => {
+      partialMap[attribute.id] = raceAttributes[race.id][attribute.id];
+    }, {});
+
     return (
       <tr>
         <td>{/* #TODO: add edit/delete links */}</td>
         <td>{/* #TODO: add thumbnail component */}</td>
         <td>{race.attributes.name}</td>
-        {race.relationships.attributes.data.map(attribute => <RaceAttributeLevel attribute_level={attribute} key={attribute.id} />)}
+        {attributeOrder.map(attributeId => <RaceAttributeLevel raceAttribute={raceAttributeMap[attributeId]} key={attributeId} />)}
         <td>{race.attributes['min-height']}-{race.attributes['max-height']}m</td>
         <td>{race.attributes['min-move-land']}-{race.attributes['max-move-land']}m</td>
       </tr>
@@ -56,13 +68,13 @@ export class RaceRow extends React.Component {
 export class RaceAttributeLevel extends React.Component {
   render() {
     const {
-      props: { attribute_level }
+      props: { raceAttribute }
     } = this;
     return (
       <td>
-        <Level level={attribute_level.attributes.min_level} key={attribute_level.attributes.min_level} />
+        <Level level={raceAttribute.attributes['min-level']} key={raceAttribute.attributes['min-level']} />
         /
-        <Level level={attribute_level.attributes.max_level} key={attribute_level.attributes.max_level} />
+        <Level level={raceAttribute.attributes['max_level']} key={raceAttribute.attributes['max_level']} />
       </td>
     );
   }
