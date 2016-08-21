@@ -17,11 +17,12 @@ export class RaceTable extends React.Component {
     } = this;
 
     const raceAttributeMap = race_attributes.data.reduce((partialMap, raceAttribute) => {
-      if (! partialMap[raceAttribute.attributes.race_id]) {
-        partialMap[raceAttribute.attributes.race_id] = {};
+      const map = partialMap;
+      if (!map[raceAttribute.attributes.race_id]) {
+        map[raceAttribute.attributes.race_id] = {};
       }
-      partialMap[raceAttribute.attributes.race_id][raceAttribute.attributes.attribute_id] = raceAttribute;
-      return partialMap;
+      map[raceAttribute.attributes.race_id][raceAttribute.attributes.attribute_id] = raceAttribute;
+      return map;
     }, {});
     const attributeOrder = attributes.data.map(attribute => attribute.id);
 
@@ -55,9 +56,9 @@ export class RaceRow extends React.Component {
     } = this;
     var raceAttributeColumns;
     if (raceAttributes[race.id]) {
-      raceAttributeColumns = attributeOrder.map(attributeId => <RaceAttributeLevel raceAttribute={raceAttributes[race.id][attributeId]} key={attributeId} />)
+      raceAttributeColumns = attributeOrder.map(attributeId => <RaceAttributeLevel raceAttribute={raceAttributes[race.id][attributeId]} key={attributeId} />);
     } else {
-      raceAttributeColumns = attributeOrder.map(attributeId => <td key={attributeId}> </td>)
+      raceAttributeColumns = attributeOrder.map(attributeId => <td key={attributeId} />);
     }
 
     return (
