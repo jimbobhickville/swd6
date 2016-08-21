@@ -7,7 +7,7 @@ db = flask_sqlalchemy.SQLAlchemy()
 class Armor(db.Model):
     __tablename__ = 'armor'
 
-    armor_id = db.Column(db.Integer, primary_key=True, server_default=db.text("nextval('armor_armor_id_seq'::regclass)"))
+    id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     areas_covered = db.Column(pg.ARRAY(pg.ENUM('Head', 'Neck', 'Upper Chest', 'Abdomen', 'Groin', 'Upper Back', 'Lower Back', 'Buttocks', 'Shoulders', 'Upper Arms', 'Forearms', 'Hands', 'Thighs', 'Shins', 'Feet', 'Joints', name='armor_areas_covered')), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -33,7 +33,8 @@ class Attribute(db.Model):
 t_character_armor = db.Table(
     'character_armor', db.metadata,
     db.Column('character_id', db.ForeignKey('character_sheet.id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True),
-    db.Column('armor_id', db.ForeignKey('armor.armor_id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False, index=True)
+    db.Column('armor_id', db.ForeignKey('armor.id', ondelete='CASCADE', onupdate='RESTRICT'),
+              nullable=False, index=True)
 )
 
 
@@ -80,9 +81,9 @@ class CharacterSheet(db.Model):
     race = db.relationship('Race')
     explosives = db.relationship('WeaponExplosive', secondary='character_weapon_explosive')
     vehicles = db.relationship('Vehicle', secondary='character_vehicle')
-    melees = db.relationship('WeaponMelee', secondary='character_weapon_melee')
+    melee_weapons = db.relationship('WeaponMelee', secondary='character_weapon_melee')
     starships = db.relationship('Starship', secondary='character_starship')
-    rangeds = db.relationship('WeaponRanged', secondary='character_weapon_ranged')
+    ranged_weapons = db.relationship('WeaponRanged', secondary='character_weapon_ranged')
 
 
 class CharacterSkill(db.Model):
@@ -184,9 +185,9 @@ class ForcePower(db.Model):
 class Image(db.Model):
     __tablename__ = 'image'
 
-    image_id = db.Column(db.BigInteger, primary_key=True, server_default=db.text("nextval('image_image_id_seq'::regclass)"))
-    mod_name = db.Column(db.String(40), nullable=False, index=True)
-    id = db.Column(db.BigInteger, nullable=False, index=True)
+    id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
+    item_type = db.Column(db.String(40), nullable=False, index=True)
+    item_id = db.Column(pg.UUID, nullable=False, index=True)
     order_num = db.Column(db.SmallInteger, nullable=False)
     name = db.Column(db.String(120), nullable=False)
     dir = db.Column(db.String(100), nullable=False)
