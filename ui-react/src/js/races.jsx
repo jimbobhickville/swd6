@@ -15,7 +15,7 @@ export class RaceTable extends React.Component {
     const {
       props: { races, attributes, race_attributes }
     } = this;
-    console.log(this.props);
+
     const raceAttributeMap = race_attributes.data.reduce((partialMap, raceAttribute) => {
       if (! partialMap[raceAttribute.attributes.race_id]) {
         partialMap[raceAttribute.attributes.race_id] = {};
@@ -24,6 +24,7 @@ export class RaceTable extends React.Component {
       return partialMap;
     }, {});
     const attributeOrder = attributes.data.map(attribute => attribute.id);
+
     return (
       <div className="races">
         <h1>Races</h1>
