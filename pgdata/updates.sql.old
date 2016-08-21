@@ -10,14 +10,14 @@ drop index idx_16565_race_id_2;
 alter table race alter column min_height type numeric(3, 1) using min_height::numeric;
 alter table race alter column max_height type numeric(3, 1) using max_height::numeric;
 alter table race add column attribute_level numeric(3, 1);
-update race set attribute_level = (attribute_dice + attribute_pip / 10)::numeric;
+update race set attribute_level = (attribute_dice::numeric + attribute_pip::numeric / 10)::numeric;
 alter table race alter column attribute_level set not null;
 alter table race alter column attribute_level set default 12.0;
 alter table race drop column attribute_dice;
 alter table race drop column attribute_pip;
 
 alter table skill_advanced add column prerequisite_level numeric(3, 1);
-update skill_advanced set prerequisite_level = (prereq_dice + prereq_pip / 10)::numeric;
+update skill_advanced set prerequisite_level = (prereq_dice::numeric + prereq_pip::numeric / 10)::numeric;
 alter table skill_advanced alter column prerequisite_level set not null;
 alter table skill_advanced alter column prerequisite_level set default 5.0;
 alter table skill_advanced drop column prereq_dice;
@@ -26,14 +26,14 @@ alter table skill_advanced drop column prereq_pip;
 alter table race_attrib_levels rename to race_attribute;
 
 alter table race_attribute add column min_level numeric(3, 1);
-update race_attribute set min_level = (min_dice + min_pip / 10)::numeric;
+update race_attribute set min_level = (min_dice::numeric + min_pip::numeric / 10)::numeric;
 alter table race_attribute alter column min_level set not null;
 alter table race_attribute alter column min_level set default 2.0;
 alter table race_attribute drop column min_dice;
 alter table race_attribute drop column min_pip;
 
 alter table race_attribute add column max_level numeric(3, 1);
-update race_attribute set max_level = (max_dice + max_pip / 10)::numeric;
+update race_attribute set max_level = (max_dice::numeric + max_pip::numeric / 10)::numeric;
 alter table race_attribute alter column max_level set not null;
 alter table race_attribute alter column max_level set default 4.0;
 alter table race_attribute drop column max_dice;
