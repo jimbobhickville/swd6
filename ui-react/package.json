@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint --ext .js --ext .jsx .",
-    "start": "webpack-dev-server --history-api-fallback --content-base dist",
+    "start": "webpack-dev-server --history-api-fallback --content-base dist --port 9090",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
