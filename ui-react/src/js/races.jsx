@@ -1,7 +1,7 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { readEndpoint } from 'redux-json-api';
 
-import { jsonApiConnect } from './jsonapi';
 import { Level } from './util';
 
 export class RaceTable extends React.Component {
@@ -12,18 +12,10 @@ export class RaceTable extends React.Component {
   }
 
   render() {
-    const {
-      props: { races, attributes, race_attributes }
+    var {
+      props: { races, attributes, raceAttributeMap }
     } = this;
 
-    const raceAttributeMap = race_attributes.data.reduce((partialMap, raceAttribute) => {
-      const map = partialMap;
-      if (!map[raceAttribute.attributes.race_id]) {
-        map[raceAttribute.attributes.race_id] = {};
-      }
-      map[raceAttribute.attributes.race_id][raceAttribute.attributes.attribute_id] = raceAttribute;
-      return map;
-    }, {});
     const attributeOrder = attributes.data.map(attribute => attribute.id);
 
     return (
@@ -47,7 +39,7 @@ export class RaceTable extends React.Component {
   }
 }
 
-RaceTable.defaultProps = { races: { data: [] }, attributes: { data: [] }, race_attributes: { data: [] } };
+RaceTable.defaultProps = { races: { data: [] }, attributes: { data: [] } };
 
 export class RaceRow extends React.Component {
   render() {
@@ -89,4 +81,11 @@ export class RaceAttributeLevel extends React.Component {
   }
 }
 
-export const RacePage = jsonApiConnect(RaceTable);
+const mapStateToProps = (state) => ({
+  races: state.api.races,
+  attributes: state.api.attributes,
+  race_attributes: state.api.race_attributes,
+  raceAttributeMap: state.raceAttributeMap
+});
+
+export const RacePage = connect(mapStateToProps)(RaceTable);

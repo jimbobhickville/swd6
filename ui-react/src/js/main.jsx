@@ -4,11 +4,11 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { Router, Route, browserHistory } from 'react-router';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { reducer as api } from 'redux-json-api';
+import { createStore, applyMiddleware } from 'redux';
 import createLogger from 'redux-logger';
 import thunkMiddleware from 'redux-thunk';
 
+import reducer from './reducers';
 import { About } from './about';
 import { App } from './app';
 import { Home } from './home';
@@ -16,10 +16,7 @@ import { RacePage } from './races';
 
 const loggerMiddleware = createLogger();
 
-const reducers = combineReducers({
-  api
-});
-let store = createStore(reducers, applyMiddleware(
+let store = createStore(reducer, applyMiddleware(
   thunkMiddleware, // lets us dispatch() functions
   loggerMiddleware // neat middleware that logs actions
 ));
