@@ -8,7 +8,7 @@ export class RaceTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(readEndpoint('attributes?sort=name'));
-    dispatch(readEndpoint('races?sort=name&include=attributes'));
+    dispatch(readEndpoint('races?sort=name&include=attributes&fields[races]=name,min_height,max_height,min_move_land,max_move_land'));
   }
 
   render() {
