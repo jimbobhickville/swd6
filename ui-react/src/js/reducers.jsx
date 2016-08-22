@@ -12,19 +12,17 @@ const generateRaceAttributes = (state, action) => {
       const [url, paramStr] = action.payload.endpoint.split('?');
       const params = queryString.parse(paramStr);
       const includes = params.include ? params.include.split(',') : [];
-      /* TODO: make this somehow more generic */
-      if (url === 'races' && includes.includes('attributes')) {
-        const raceAttributeMap = state.api.race_attributes.data.reduce((partialMap, raceAttribute) => {
+
+      const includeMap = state.includeMap || {};
+      includes.map(includeKey => {
+        includeMap[includeKey] = state.api[includeKey].data.reduce((partialMap, includedObj) => {
           const map = partialMap;
-          if (!map[raceAttribute.attributes.race_id]) {
-            map[raceAttribute.attributes.race_id] = {};
-          }
-          map[raceAttribute.attributes.race_id][raceAttribute.attributes.attribute_id] = raceAttribute;
+          map[includedObj.id] = includedObj;
           return map;
         }, {});
 
-        newState = Object.assign({}, state, { raceAttributeMap });
-      }
+        newState = Object.assign({}, state, { includeMap });
+      });
       break;
 
     default:
@@ -36,7 +34,7 @@ const generateRaceAttributes = (state, action) => {
 
 const combinedReducer = combineReducers({
   api,
-  raceAttributeMap: (state) => Object.assign({}, state)
+  includeMap: (state) => Object.assign({}, state)
 });
 
 // Join all reducers into one.
