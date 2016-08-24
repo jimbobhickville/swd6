@@ -20,6 +20,15 @@ class Armor(db.Model):
     price_used = db.Column(db.SmallInteger, nullable=False)
 
     characters = db.relationship('CharacterSheet', secondary='character_armor')
+    images = db.relationship('Image', secondary='armor_image')
+
+
+t_armor_image = db.Table(
+    'armor_image', db.metadata,
+    db.Column('armor_id', db.ForeignKey('armor.id', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False),
+    db.Column('image_id', db.ForeignKey('image.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
+    db.UniqueConstraint('armor_id', 'image_id')
+)
 
 
 class Attribute(db.Model):
@@ -186,8 +195,6 @@ class Image(db.Model):
     __tablename__ = 'image'
 
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
-    item_type = db.Column(db.String(40), nullable=False, index=True)
-    item_id = db.Column(pg.UUID, nullable=False, index=True)
     order_num = db.Column(db.SmallInteger, nullable=False)
     name = db.Column(db.String(120), nullable=False)
     dir = db.Column(db.String(100), nullable=False)
@@ -204,6 +211,16 @@ class Planet(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
+
+    images = db.relationship('Image', secondary='planet_image')
+
+
+t_planet_image = db.Table(
+    'planet_image', db.metadata,
+    db.Column('planet_id', db.ForeignKey('planet.id', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False),
+    db.Column('image_id', db.ForeignKey('image.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
+    db.UniqueConstraint('planet_id', 'image_id')
+)
 
 
 class Race(db.Model):
@@ -228,6 +245,15 @@ class Race(db.Model):
     planet_id = db.Column(db.ForeignKey('planet.id', ondelete='RESTRICT', onupdate='CASCADE'))
 
     planet = db.relationship('Planet')
+    images = db.relationship('Image', secondary='race_image')
+
+
+t_race_image = db.Table(
+    'race_image', db.metadata,
+    db.Column('race_id', db.ForeignKey('race.id', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False),
+    db.Column('image_id', db.ForeignKey('image.id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
+    db.UniqueConstraint('race_id', 'image_id')
+)
 
 
 class RaceAttribute(db.Model):
@@ -243,7 +269,7 @@ class RaceAttribute(db.Model):
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
 
     attribute = db.relationship('Attribute')
-    race = db.relationship('Race', backref='attributes')
+    race = db.relationship('Race', backref='race_attributes')
 
 
 class Scale(db.Model):
