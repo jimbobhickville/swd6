@@ -7,7 +7,7 @@ import { Level } from './util';
 export class RaceTable extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(readEndpoint('attributes?sort=name'));
+    dispatch(readEndpoint('attributes?sort=display_order'));
     dispatch(readEndpoint('races?sort=name&include=race_attributes,images&fields[races]=name,min_height,max_height,min_move_land,max_move_land,race_attributes,images'));
   }
 

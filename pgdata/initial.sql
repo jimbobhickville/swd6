@@ -44,10 +44,10 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 SET search_path = public, pg_catalog;
 
 --
--- Name: armor_areas_covered; Type: TYPE; Schema: public; Owner: swd6
+-- Name: body_areas; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE armor_areas_covered AS ENUM (
+CREATE TYPE body_areas AS ENUM (
     'Head',
     'Neck',
     'Upper Chest',
@@ -67,77 +67,64 @@ CREATE TYPE armor_areas_covered AS ENUM (
 );
 
 
-ALTER TYPE armor_areas_covered OWNER TO swd6;
+ALTER TYPE body_areas OWNER TO swd6;
 
 --
--- Name: armor_availability; Type: TYPE; Schema: public; Owner: swd6
+-- Name: rarity; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE armor_availability AS ENUM (
+CREATE TYPE rarity AS ENUM (
     'Common',
     'Rare',
     'Not For Sale'
 );
 
 
-ALTER TYPE armor_availability OWNER TO swd6;
+ALTER TYPE rarity OWNER TO swd6;
 
 --
--- Name: character_sheet_gender; Type: TYPE; Schema: public; Owner: swd6
+-- Name: gender; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE character_sheet_gender AS ENUM (
+CREATE TYPE gender AS ENUM (
     'M',
     'F'
 );
 
 
-ALTER TYPE character_sheet_gender OWNER TO swd6;
+ALTER TYPE gender OWNER TO swd6;
 
 --
--- Name: race_basic_ability; Type: TYPE; Schema: public; Owner: swd6
+-- Name: language_ability; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE race_basic_ability AS ENUM (
+CREATE TYPE language_ability AS ENUM (
     'Speak',
     'Understand',
     'None'
 );
 
 
-ALTER TYPE race_basic_ability OWNER TO swd6;
+ALTER TYPE language_ability OWNER TO swd6;
 
 --
--- Name: race_playable_type; Type: TYPE; Schema: public; Owner: swd6
+-- Name: playable_type; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE race_playable_type AS ENUM (
+CREATE TYPE playable_type AS ENUM (
     'PC',
     'NPC',
     'Creature'
 );
 
 
-ALTER TYPE race_playable_type OWNER TO swd6;
+ALTER TYPE playable_type OWNER TO swd6;
 
 --
--- Name: starship_availability; Type: TYPE; Schema: public; Owner: swd6
+-- Name: fire_arc; Type: TYPE; Schema: public; Owner: swd6
 --
 
-CREATE TYPE starship_availability AS ENUM (
-    'Common',
-    'Rare',
-    'Not For Sale'
-);
-
-
-ALTER TYPE starship_availability OWNER TO swd6;
-
---
--- Name: starship_weapon_fire_arc; Type: TYPE; Schema: public; Owner: swd6
---
-
-CREATE TYPE starship_weapon_fire_arc AS ENUM (
+CREATE TYPE fire_arc AS ENUM (
     'Above',
     'Below',
     'Front',
@@ -147,36 +134,7 @@ CREATE TYPE starship_weapon_fire_arc AS ENUM (
 );
 
 
-ALTER TYPE starship_weapon_fire_arc OWNER TO swd6;
-
---
--- Name: vehicle_availability; Type: TYPE; Schema: public; Owner: swd6
---
-
-CREATE TYPE vehicle_availability AS ENUM (
-    'Common',
-    'Rare',
-    'Not For Sale'
-);
-
-
-ALTER TYPE vehicle_availability OWNER TO swd6;
-
---
--- Name: vehicle_weapon_fire_arc; Type: TYPE; Schema: public; Owner: swd6
---
-
-CREATE TYPE vehicle_weapon_fire_arc AS ENUM (
-    'Above',
-    'Below',
-    'Front',
-    'Back',
-    'Left',
-    'Right'
-);
-
-
-ALTER TYPE vehicle_weapon_fire_arc OWNER TO swd6;
+ALTER TYPE fire_arc OWNER TO swd6;
 
 SET default_tablespace = '';
 
@@ -187,14 +145,12 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE armor (
-    areas_covered armor_areas_covered[] NOT NULL,
+    areas_covered body_areas[] NOT NULL,
     name character varying(100) NOT NULL,
     description text NOT NULL,
-    resist_physical_dice smallint NOT NULL,
-    resist_physical_pip smallint NOT NULL,
-    resist_energy_dice smallint NOT NULL,
-    resist_energy_pip smallint NOT NULL,
-    availability armor_availability DEFAULT 'Common'::armor_availability NOT NULL,
+    resist_physical numeric(3, 1) NOT NULL,
+    resist_energy numeric(3, 1) NOT NULL,
+    rarity rarity DEFAULT 'Common'::rarity NOT NULL,
     price_new smallint NOT NULL,
     price_used smallint NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL
@@ -222,7 +178,8 @@ ALTER TABLE armor_image OWNER TO swd6;
 CREATE TABLE attribute (
     name character varying(30) NOT NULL,
     id character(3) NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    display_order smallint NOT NULL
 );
 
 
@@ -255,6 +212,18 @@ CREATE TABLE character_attribute (
 ALTER TABLE character_attribute OWNER TO swd6;
 
 --
+-- Name: character_image; Type: TABLE; Schema: public; Owner: swd6
+--
+
+CREATE TABLE character_image (
+    character_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
+
+
+ALTER TABLE character_image OWNER TO swd6;
+
+--
 -- Name: character_sheet; Type: TABLE; Schema: public; Owner: swd6
 --
 
@@ -262,13 +231,13 @@ CREATE TABLE character_sheet (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     race_id uuid NOT NULL,
     planet_id uuid,
-    character_type_id smallint NOT NULL,
+    character_type_id uuid NOT NULL,
     name character varying(100) NOT NULL,
     description text NOT NULL,
     background text NOT NULL,
     motivation text NOT NULL,
     quote text NOT NULL,
-    gender character_sheet_gender DEFAULT 'M'::character_sheet_gender NOT NULL,
+    gender gender DEFAULT 'M'::gender NOT NULL,
     age smallint NOT NULL,
     height numeric(3,1) NOT NULL,
     weight integer NOT NULL,
@@ -320,7 +289,7 @@ ALTER TABLE character_specialization OWNER TO swd6;
 
 CREATE TABLE character_starship (
     character_id uuid NOT NULL,
-    starship_id smallint NOT NULL
+    starship_id uuid NOT NULL
 );
 
 
@@ -331,32 +300,13 @@ ALTER TABLE character_starship OWNER TO swd6;
 --
 
 CREATE TABLE character_type (
-    character_type_id integer NOT NULL,
-    name character varying(50) NOT NULL
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    name character varying(50) NOT NULL,
+    description text
 );
 
 
 ALTER TABLE character_type OWNER TO swd6;
-
---
--- Name: character_type_character_type_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
---
-
-CREATE SEQUENCE character_type_character_type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE character_type_character_type_id_seq OWNER TO swd6;
-
---
--- Name: character_type_character_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE character_type_character_type_id_seq OWNED BY character_type.character_type_id;
 
 
 --
@@ -365,7 +315,7 @@ ALTER SEQUENCE character_type_character_type_id_seq OWNED BY character_type.char
 
 CREATE TABLE character_vehicle (
     character_id uuid NOT NULL,
-    vehicle_id smallint NOT NULL
+    vehicle_id uuid NOT NULL
 );
 
 
@@ -377,7 +327,7 @@ ALTER TABLE character_vehicle OWNER TO swd6;
 
 CREATE TABLE character_weapon_explosive (
     character_id uuid NOT NULL,
-    explosive_id smallint NOT NULL
+    explosive_id uuid NOT NULL
 );
 
 
@@ -389,7 +339,7 @@ ALTER TABLE character_weapon_explosive OWNER TO swd6;
 
 CREATE TABLE character_weapon_melee (
     character_id uuid NOT NULL,
-    melee_id smallint NOT NULL
+    melee_id uuid NOT NULL
 );
 
 
@@ -401,7 +351,7 @@ ALTER TABLE character_weapon_melee OWNER TO swd6;
 
 CREATE TABLE character_weapon_ranged (
     character_id uuid NOT NULL,
-    ranged_id smallint NOT NULL
+    ranged_id uuid NOT NULL
 );
 
 
@@ -454,7 +404,7 @@ ALTER TABLE force_power OWNER TO swd6;
 --
 
 CREATE TABLE image (
-    order_num smallint NOT NULL,
+    display_order smallint NOT NULL,
     name character varying(120) NOT NULL,
     dir character varying(100) NOT NULL,
     caption character varying(200) NOT NULL,
@@ -498,9 +448,9 @@ ALTER TABLE planet_image OWNER TO swd6;
 --
 
 CREATE TABLE race (
-    playable_type race_playable_type DEFAULT 'PC'::race_playable_type NOT NULL,
+    playable_type playable_type DEFAULT 'PC'::playable_type NOT NULL,
     name character varying(100) NOT NULL,
-    basic_ability race_basic_ability DEFAULT 'Speak'::race_basic_ability NOT NULL,
+    basic_ability language_ability DEFAULT 'Speak'::language_ability NOT NULL,
     description text NOT NULL,
     special_abilities text NOT NULL,
     story_factors text NOT NULL,
@@ -552,34 +502,12 @@ ALTER TABLE race_image OWNER TO swd6;
 --
 
 CREATE TABLE scale (
-    scale_id integer NOT NULL,
-    name character varying(30) NOT NULL,
-    scale_dice smallint NOT NULL,
-    scale_pip smallint NOT NULL
+    id character varying(30) NOT NULL,
+    modifier numeric(3,1) NOT NULL
 );
 
 
 ALTER TABLE scale OWNER TO swd6;
-
---
--- Name: scale_scale_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
---
-
-CREATE SEQUENCE scale_scale_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE scale_scale_id_seq OWNER TO swd6;
-
---
--- Name: scale_scale_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE scale_scale_id_seq OWNED BY scale.scale_id;
 
 
 --
@@ -629,9 +557,9 @@ ALTER TABLE skill_specialization OWNER TO swd6;
 --
 
 CREATE TABLE starship (
-    starship_id integer NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     skill_id uuid,
-    scale_id smallint,
+    scale_id character varying(30),
     name character varying(100) NOT NULL,
     type character varying(100) NOT NULL,
     description text NOT NULL,
@@ -647,25 +575,18 @@ CREATE TABLE starship (
     speed_space smallint NOT NULL,
     speed_atmosphere_min smallint NOT NULL,
     speed_atmosphere_max smallint NOT NULL,
-    maneuver_dice smallint NOT NULL,
-    maneuver_pip smallint NOT NULL,
-    hull_dice smallint NOT NULL,
-    hull_pip smallint NOT NULL,
-    shields_dice smallint NOT NULL,
-    shields_pip smallint NOT NULL,
+    maneuver numeric(3,1) NOT NULL,
+    hull numeric(3, 1) NOT NULL,
+    shields numeric(3, 1) NOT NULL,
     sensors_passive_range smallint NOT NULL,
-    sensors_passive_dice smallint NOT NULL,
-    sensors_passive_pip smallint NOT NULL,
+    sensors_passive_level numeric(3, 1) NOT NULL,
     sensors_scan_range smallint NOT NULL,
-    sensors_scan_dice smallint NOT NULL,
-    sensors_scan_pip smallint NOT NULL,
+    sensors_scan_level numeric(3, 1) NOT NULL,
     sensors_search_range smallint NOT NULL,
-    sensors_search_dice smallint NOT NULL,
-    sensors_search_pip smallint NOT NULL,
+    sensors_search_level numeric(3, 1) NOT NULL,
     sensors_focus_range smallint NOT NULL,
-    sensors_focus_dice smallint NOT NULL,
-    sensors_focus_pip smallint NOT NULL,
-    availability starship_availability DEFAULT 'Common'::starship_availability NOT NULL,
+    sensors_focus_level numeric(3, 1) NOT NULL,
+    rarity rarity DEFAULT 'Common'::rarity NOT NULL,
     price_new integer,
     price_used integer
 );
@@ -674,41 +595,31 @@ CREATE TABLE starship (
 ALTER TABLE starship OWNER TO swd6;
 
 --
--- Name: starship_starship_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
+-- Name: starship_image; Type: TABLE; Schema: public; Owner: swd6
 --
 
-CREATE SEQUENCE starship_starship_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE starship_image (
+    starship_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
 
 
-ALTER TABLE starship_starship_id_seq OWNER TO swd6;
-
---
--- Name: starship_starship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE starship_starship_id_seq OWNED BY starship.starship_id;
-
+ALTER TABLE starship_image OWNER TO swd6;
 
 --
 -- Name: starship_weapon; Type: TABLE; Schema: public; Owner: swd6
 --
 
 CREATE TABLE starship_weapon (
-    starship_weapon_id bigint NOT NULL,
-    starship_id smallint NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    starship_id uuid NOT NULL,
     skill_id uuid,
     type character varying(100) NOT NULL,
     number smallint NOT NULL,
     crew smallint NOT NULL,
     fire_rate double precision,
-    fire_control_dice smallint NOT NULL,
-    fire_control_pip smallint NOT NULL,
-    fire_arc starship_weapon_fire_arc[] NOT NULL,
+    fire_control numeric(3, 1) NOT NULL,
+    fire_arc fire_arc[] NOT NULL,
     fire_linked smallint NOT NULL,
     range_minimum_space smallint NOT NULL,
     range_short_space smallint NOT NULL,
@@ -718,32 +629,11 @@ CREATE TABLE starship_weapon (
     range_short_atmosphere smallint NOT NULL,
     range_medium_atmosphere smallint NOT NULL,
     range_long_atmosphere smallint NOT NULL,
-    damage_dice smallint NOT NULL,
-    damage_pip smallint NOT NULL
+    damage numeric(3, 1)
 );
 
 
 ALTER TABLE starship_weapon OWNER TO swd6;
-
---
--- Name: starship_weapon_starship_weapon_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
---
-
-CREATE SEQUENCE starship_weapon_starship_weapon_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE starship_weapon_starship_weapon_id_seq OWNER TO swd6;
-
---
--- Name: starship_weapon_starship_weapon_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE starship_weapon_starship_weapon_id_seq OWNED BY starship_weapon.starship_weapon_id;
 
 
 --
@@ -751,9 +641,9 @@ ALTER SEQUENCE starship_weapon_starship_weapon_id_seq OWNED BY starship_weapon.s
 --
 
 CREATE TABLE vehicle (
-    vehicle_id integer NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     skill_id uuid,
-    scale_id smallint,
+    scale_id character varying(30),
     name character varying(100) NOT NULL,
     type character varying(100) NOT NULL,
     description text NOT NULL,
@@ -767,13 +657,10 @@ CREATE TABLE vehicle (
     speed_max smallint NOT NULL,
     altitude_min smallint NOT NULL,
     altitude_max smallint NOT NULL,
-    maneuver_dice smallint NOT NULL,
-    maneuver_pip smallint NOT NULL,
-    hull_dice smallint NOT NULL,
-    hull_pip smallint NOT NULL,
-    shields_dice smallint NOT NULL,
-    shields_pip smallint NOT NULL,
-    availability vehicle_availability DEFAULT 'Common'::vehicle_availability NOT NULL,
+    maneuver numeric(3, 1) NOT NULL,
+    hull numeric(3, 1) NOT NULL,
+    shields numeric(3, 1) NOT NULL,
+    rarity rarity DEFAULT 'Common'::rarity NOT NULL,
     price_new integer,
     price_used integer
 );
@@ -782,24 +669,16 @@ CREATE TABLE vehicle (
 ALTER TABLE vehicle OWNER TO swd6;
 
 --
--- Name: vehicle_vehicle_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
+-- Name: vehicle_image; Type: TABLE; Schema: public; Owner: swd6
 --
 
-CREATE SEQUENCE vehicle_vehicle_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE vehicle_image (
+    vehicle_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
 
 
-ALTER TABLE vehicle_vehicle_id_seq OWNER TO swd6;
-
---
--- Name: vehicle_vehicle_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE vehicle_vehicle_id_seq OWNED BY vehicle.vehicle_id;
+ALTER TABLE vehicle_image OWNER TO swd6;
 
 
 --
@@ -807,47 +686,25 @@ ALTER SEQUENCE vehicle_vehicle_id_seq OWNED BY vehicle.vehicle_id;
 --
 
 CREATE TABLE vehicle_weapon (
-    vehicle_weapon_id bigint NOT NULL,
-    vehicle_id smallint NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    vehicle_id uuid NOT NULL,
     skill_id uuid,
     type character varying(100) NOT NULL,
     number smallint NOT NULL,
     crew smallint NOT NULL,
     fire_rate double precision,
-    fire_control_dice smallint NOT NULL,
-    fire_control_pip smallint NOT NULL,
-    fire_arc vehicle_weapon_fire_arc[] NOT NULL,
+    fire_control numeric(3, 1) NOT NULL,
+    fire_arc fire_arc[] NOT NULL,
     fire_linked smallint NOT NULL,
     range_minimum smallint NOT NULL,
     range_short smallint NOT NULL,
     range_medium smallint NOT NULL,
     range_long smallint NOT NULL,
-    damage_dice smallint NOT NULL,
-    damage_pip smallint NOT NULL
+    damage numeric(3, 1) NOT NULL
 );
 
 
 ALTER TABLE vehicle_weapon OWNER TO swd6;
-
---
--- Name: vehicle_weapon_vehicle_weapon_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
---
-
-CREATE SEQUENCE vehicle_weapon_vehicle_weapon_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE vehicle_weapon_vehicle_weapon_id_seq OWNER TO swd6;
-
---
--- Name: vehicle_weapon_vehicle_weapon_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE vehicle_weapon_vehicle_weapon_id_seq OWNED BY vehicle_weapon.vehicle_weapon_id;
 
 
 --
@@ -855,7 +712,7 @@ ALTER SEQUENCE vehicle_weapon_vehicle_weapon_id_seq OWNED BY vehicle_weapon.vehi
 --
 
 CREATE TABLE weapon_explosive (
-    explosive_id integer NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     skill_id uuid,
     name character varying(100) NOT NULL,
     description text NOT NULL,
@@ -873,34 +730,25 @@ ALTER TABLE weapon_explosive OWNER TO swd6;
 --
 
 CREATE TABLE weapon_explosive_damage (
-    explosive_id smallint NOT NULL,
+    explosive_id uuid NOT NULL,
     radius smallint NOT NULL,
-    damage_dice smallint NOT NULL,
-    damage_pip smallint NOT NULL
+    damage numeric(3, 1) NOT NULL
 );
 
 
 ALTER TABLE weapon_explosive_damage OWNER TO swd6;
 
 --
--- Name: weapon_explosive_explosive_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
+-- Name: weapon_explosive_image; Type: TABLE; Schema: public; Owner: swd6
 --
 
-CREATE SEQUENCE weapon_explosive_explosive_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE weapon_explosive_image (
+    weapon_explosive_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
 
 
-ALTER TABLE weapon_explosive_explosive_id_seq OWNER TO swd6;
-
---
--- Name: weapon_explosive_explosive_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE weapon_explosive_explosive_id_seq OWNED BY weapon_explosive.explosive_id;
+ALTER TABLE weapon_explosive_image OWNER TO swd6;
 
 
 --
@@ -908,38 +756,28 @@ ALTER SEQUENCE weapon_explosive_explosive_id_seq OWNED BY weapon_explosive.explo
 --
 
 CREATE TABLE weapon_melee (
-    melee_id integer NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     skill_id uuid,
     name character varying(100) NOT NULL,
     description text NOT NULL,
-    damage_dice smallint NOT NULL,
-    damage_pip smallint NOT NULL,
-    max_damage_dice smallint NOT NULL,
-    max_damage_pip smallint NOT NULL
+    damage numeric(3, 1) NOT NULL,
+    max_damage numeric(3, 1) NOT NULL
 );
 
 
 ALTER TABLE weapon_melee OWNER TO swd6;
 
 --
--- Name: weapon_melee_melee_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
+-- Name: weapon_melee_image; Type: TABLE; Schema: public; Owner: swd6
 --
 
-CREATE SEQUENCE weapon_melee_melee_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE weapon_melee_image (
+    weapon_melee_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
 
 
-ALTER TABLE weapon_melee_melee_id_seq OWNER TO swd6;
-
---
--- Name: weapon_melee_melee_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE weapon_melee_melee_id_seq OWNED BY weapon_melee.melee_id;
+ALTER TABLE weapon_melee_image OWNER TO swd6;
 
 
 --
@@ -947,7 +785,7 @@ ALTER SEQUENCE weapon_melee_melee_id_seq OWNED BY weapon_melee.melee_id;
 --
 
 CREATE TABLE weapon_ranged (
-    ranged_id integer NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     skill_id uuid,
     name character varying(100) NOT NULL,
     description text NOT NULL,
@@ -956,103 +794,31 @@ CREATE TABLE weapon_ranged (
     range_short smallint NOT NULL,
     range_medium smallint NOT NULL,
     range_long smallint NOT NULL,
-    damage_dice smallint NOT NULL,
-    damage_pip smallint NOT NULL
+    damage numeric(3, 1) NOT NULL
 );
 
 
 ALTER TABLE weapon_ranged OWNER TO swd6;
 
 --
--- Name: weapon_ranged_ranged_id_seq; Type: SEQUENCE; Schema: public; Owner: swd6
+-- Name: weapon_ranged_image; Type: TABLE; Schema: public; Owner: swd6
 --
 
-CREATE SEQUENCE weapon_ranged_ranged_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE weapon_ranged_image (
+    weapon_ranged_id uuid NOT NULL,
+    image_id uuid NOT NULL
+);
 
 
-ALTER TABLE weapon_ranged_ranged_id_seq OWNER TO swd6;
-
---
--- Name: weapon_ranged_ranged_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: swd6
---
-
-ALTER SEQUENCE weapon_ranged_ranged_id_seq OWNED BY weapon_ranged.ranged_id;
-
-
---
--- Name: character_type_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY character_type ALTER COLUMN character_type_id SET DEFAULT nextval('character_type_character_type_id_seq'::regclass);
-
-
---
--- Name: scale_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY scale ALTER COLUMN scale_id SET DEFAULT nextval('scale_scale_id_seq'::regclass);
-
-
---
--- Name: starship_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY starship ALTER COLUMN starship_id SET DEFAULT nextval('starship_starship_id_seq'::regclass);
-
-
---
--- Name: starship_weapon_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY starship_weapon ALTER COLUMN starship_weapon_id SET DEFAULT nextval('starship_weapon_starship_weapon_id_seq'::regclass);
-
-
---
--- Name: vehicle_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY vehicle ALTER COLUMN vehicle_id SET DEFAULT nextval('vehicle_vehicle_id_seq'::regclass);
-
-
---
--- Name: vehicle_weapon_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY vehicle_weapon ALTER COLUMN vehicle_weapon_id SET DEFAULT nextval('vehicle_weapon_vehicle_weapon_id_seq'::regclass);
-
-
---
--- Name: explosive_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY weapon_explosive ALTER COLUMN explosive_id SET DEFAULT nextval('weapon_explosive_explosive_id_seq'::regclass);
-
-
---
--- Name: melee_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY weapon_melee ALTER COLUMN melee_id SET DEFAULT nextval('weapon_melee_melee_id_seq'::regclass);
-
-
---
--- Name: ranged_id; Type: DEFAULT; Schema: public; Owner: swd6
---
-
-ALTER TABLE ONLY weapon_ranged ALTER COLUMN ranged_id SET DEFAULT nextval('weapon_ranged_ranged_id_seq'::regclass);
+ALTER TABLE weapon_ranged_image OWNER TO swd6;
 
 
 --
 -- Data for Name: armor; Type: TABLE DATA; Schema: public; Owner: swd6
 --
 
-COPY armor (areas_covered, name, description, resist_physical_dice, resist_physical_pip, resist_energy_dice, resist_energy_pip, availability, price_new, price_used, id) FROM stdin;
-{Head,"Upper Chest",Abdomen,Groin,"Upper Back","Lower Back",Buttocks,Shoulders,"Upper Arms",Forearms,Hands,Thighs,Shins,Feet}	Antique Hutt Battle Armor	Ancient Huttese ceremonial armor used for dueling.	2	0	1	0	Rare	0	0	75d3690b-3dd8-4c78-890a-2eaa6e58ffe8
+COPY armor (areas_covered, name, description, resist_physical, resist_energy, rarity, price_new, price_used, id) FROM stdin;
+{Head,"Upper Chest",Abdomen,Groin,"Upper Back","Lower Back",Buttocks,Shoulders,"Upper Arms",Forearms,Hands,Thighs,Shins,Feet}	Antique Hutt Battle Armor	Ancient Huttese ceremonial armor used for dueling.	2.0	1.0	Rare	0	0	75d3690b-3dd8-4c78-890a-2eaa6e58ffe8
 \.
 
 
@@ -1069,108 +835,13 @@ COPY armor_image (armor_id, image_id) FROM stdin;
 -- Data for Name: attribute; Type: TABLE DATA; Schema: public; Owner: swd6
 --
 
-COPY attribute (name, id, description) FROM stdin;
-Dexterity	Dex	
-Perception	Per	
-Knowledge	Kno	
-Strength	Str	
-Mechanical	Mec	
-Technical	Tec	
-\.
-
-
---
--- Data for Name: character_armor; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_armor (character_id, armor_id) FROM stdin;
-\.
-
-
---
--- Data for Name: character_attribute; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_attribute (id, character_id, attribute_id, level) FROM stdin;
-\.
-
-
---
--- Data for Name: character_sheet; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_sheet (id, race_id, planet_id, character_type_id, name, description, background, motivation, quote, gender, age, height, weight, move_land, move_water, move_air, force_pts, dark_side_pts, character_pts, credits_bank, credits_debt, is_template) FROM stdin;
-\.
-
-
---
--- Data for Name: character_skill; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_skill (id, character_id, skill_id, level) FROM stdin;
-\.
-
-
---
--- Data for Name: character_specialization; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_specialization (id, character_id, specialization_id, level) FROM stdin;
-\.
-
-
---
--- Data for Name: character_starship; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_starship (character_id, starship_id) FROM stdin;
-\.
-
-
---
--- Data for Name: character_type; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_type (character_type_id, name) FROM stdin;
-\.
-
-
---
--- Name: character_type_character_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('character_type_character_type_id_seq', 1, true);
-
-
---
--- Data for Name: character_vehicle; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_vehicle (character_id, vehicle_id) FROM stdin;
-\.
-
-
---
--- Data for Name: character_weapon_explosive; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_weapon_explosive (character_id, explosive_id) FROM stdin;
-\.
-
-
---
--- Data for Name: character_weapon_melee; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_weapon_melee (character_id, melee_id) FROM stdin;
-\.
-
-
---
--- Data for Name: character_weapon_ranged; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY character_weapon_ranged (character_id, ranged_id) FROM stdin;
+COPY attribute (name, id, description, display_order) FROM stdin;
+Dexterity	Dex		0
+Perception	Per		1
+Knowledge	Kno		2
+Strength	Str		3
+Mechanical	Mec		4
+Technical	Tec		5
 \.
 
 
@@ -1398,7 +1069,7 @@ e7ad8246-bbd7-4ee8-9e72-59a084b6b12c	Sense + Alter
 -- Data for Name: image; Type: TABLE DATA; Schema: public; Owner: swd6
 --
 
-COPY image (order_num, name, dir, caption, image_width, image_height, thumb_width, thumb_height, id) FROM stdin;
+COPY image (display_order, name, dir, caption, image_width, image_height, thumb_width, thumb_height, id) FROM stdin;
 0	huttese.jpg	armor/0		0	0	0	0	2050877e-1fce-4700-a0b6-7e7247cee4df
 0	ruzka_ss1.jpg	races/0		0	0	0	0	f255783b-c5ec-4c68-bbcf-d87e0b9f0920
 0	Abyssin3.jpg	races/0		0	0	0	0	bf0d00c2-d214-436e-b3b7-b11c2fa8a1fb
@@ -3573,21 +3244,14 @@ e645ecde-1953-4c82-ab66-474ddf2c3c75	27327295-bb38-4c25-87a8-561d66381875
 -- Data for Name: scale; Type: TABLE DATA; Schema: public; Owner: swd6
 --
 
-COPY scale (scale_id, name, scale_dice, scale_pip) FROM stdin;
-1	Character	0	0
-2	Speeder	2	0
-3	Walker	4	0
-4	Starfighter	6	0
-5	Capital Ship	12	0
-6	Death Star	24	0
+COPY scale (id, modifier) FROM stdin;
+Being	0.0
+Speeder	2.0
+Walker	4.0
+Starfighter	6.0
+Capital Ship	12.0
+Death Star	24.0
 \.
-
-
---
--- Name: scale_scale_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('scale_scale_id_seq', 6, true);
 
 
 --
@@ -3976,119 +3640,6 @@ Grappling	334d359f-1ff9-41b8-b12b-4f985e981f10	cd410ab9-eb0c-4af3-9ef2-83280c3cc
 
 
 --
--- Data for Name: starship; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY starship (starship_id, skill_id, scale_id, name, type, description, length, capacity_crew, capacity_passengers, capacity_troops, capacity_cargo, capacity_consumables, has_nav_computer, hyperdrive_multiplier, hyperdrive_backup, speed_space, speed_atmosphere_min, speed_atmosphere_max, maneuver_dice, maneuver_pip, hull_dice, hull_pip, shields_dice, shields_pip, sensors_passive_range, sensors_passive_dice, sensors_passive_pip, sensors_scan_range, sensors_scan_dice, sensors_scan_pip, sensors_search_range, sensors_search_dice, sensors_search_pip, sensors_focus_range, sensors_focus_dice, sensors_focus_pip, availability, price_new, price_used) FROM stdin;
-\.
-
-
---
--- Name: starship_starship_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('starship_starship_id_seq', 1, true);
-
-
---
--- Data for Name: starship_weapon; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY starship_weapon (starship_weapon_id, starship_id, skill_id, type, number, crew, fire_rate, fire_control_dice, fire_control_pip, fire_arc, fire_linked, range_minimum_space, range_short_space, range_medium_space, range_long_space, range_minimum_atmosphere, range_short_atmosphere, range_medium_atmosphere, range_long_atmosphere, damage_dice, damage_pip) FROM stdin;
-\.
-
-
---
--- Name: starship_weapon_starship_weapon_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('starship_weapon_starship_weapon_id_seq', 1, true);
-
-
---
--- Data for Name: vehicle; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY vehicle (vehicle_id, skill_id, scale_id, name, type, description, cover, capacity_crew, capacity_passengers, capacity_troops, capacity_cargo, capacity_consumables, speed_min, speed_max, altitude_min, altitude_max, maneuver_dice, maneuver_pip, hull_dice, hull_pip, shields_dice, shields_pip, availability, price_new, price_used) FROM stdin;
-\.
-
-
---
--- Name: vehicle_vehicle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('vehicle_vehicle_id_seq', 1, true);
-
-
---
--- Data for Name: vehicle_weapon; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY vehicle_weapon (vehicle_weapon_id, vehicle_id, skill_id, type, number, crew, fire_rate, fire_control_dice, fire_control_pip, fire_arc, fire_linked, range_minimum, range_short, range_medium, range_long, damage_dice, damage_pip) FROM stdin;
-\.
-
-
---
--- Name: vehicle_weapon_vehicle_weapon_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('vehicle_weapon_vehicle_weapon_id_seq', 1, true);
-
-
---
--- Data for Name: weapon_explosive; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY weapon_explosive (explosive_id, skill_id, name, description, range_minimum, range_short, range_medium, range_long) FROM stdin;
-\.
-
-
---
--- Data for Name: weapon_explosive_damage; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY weapon_explosive_damage (explosive_id, radius, damage_dice, damage_pip) FROM stdin;
-\.
-
-
---
--- Name: weapon_explosive_explosive_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('weapon_explosive_explosive_id_seq', 1, true);
-
-
---
--- Data for Name: weapon_melee; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY weapon_melee (melee_id, skill_id, name, description, damage_dice, damage_pip, max_damage_dice, max_damage_pip) FROM stdin;
-\.
-
-
---
--- Name: weapon_melee_melee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('weapon_melee_melee_id_seq', 1, true);
-
-
---
--- Data for Name: weapon_ranged; Type: TABLE DATA; Schema: public; Owner: swd6
---
-
-COPY weapon_ranged (ranged_id, skill_id, name, description, fire_rate, range_minimum, range_short, range_medium, range_long, damage_dice, damage_pip) FROM stdin;
-\.
-
-
---
--- Name: weapon_ranged_ranged_id_seq; Type: SEQUENCE SET; Schema: public; Owner: swd6
---
-
-SELECT pg_catalog.setval('weapon_ranged_ranged_id_seq', 1, true);
-
-
---
 -- Name: armor_image_armor_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
 --
 
@@ -4121,6 +3672,14 @@ ALTER TABLE ONLY character_attribute
 
 
 --
+-- Name: character_image_character_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY character_image
+    ADD CONSTRAINT character_image_character_id_image_id_key UNIQUE (character_id, image_id);
+
+
+--
 -- Name: character_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
 --
 
@@ -4149,15 +3708,23 @@ ALTER TABLE ONLY character_specialization
 --
 
 ALTER TABLE ONLY character_type
-    ADD CONSTRAINT character_type_pkey PRIMARY KEY (character_type_id);
+    ADD CONSTRAINT character_type_pkey PRIMARY KEY (id);
 
 
 --
--- Name: explosive_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
+-- Name: weapon_explosive_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY weapon_explosive
-    ADD CONSTRAINT explosive_pkey PRIMARY KEY (explosive_id);
+    ADD CONSTRAINT weapon_explosive_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: weapon_explosive_image_weapon_explosive_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_explosive_image
+    ADD CONSTRAINT weapon_explosive_image_weapon_explosive_id_image_id_key UNIQUE (weapon_explosive_id, image_id);
 
 
 --
@@ -4201,11 +3768,19 @@ ALTER TABLE ONLY image
 
 
 --
--- Name: melee_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
+-- Name: weapon_melee_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY weapon_melee
-    ADD CONSTRAINT melee_pkey PRIMARY KEY (melee_id);
+    ADD CONSTRAINT weapon_melee_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: weapon_melee_image_weapon_melee_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_melee_image
+    ADD CONSTRAINT weapon_melee_image_weapon_melee_id_image_id_key UNIQUE (weapon_melee_id, image_id);
 
 
 --
@@ -4257,11 +3832,19 @@ ALTER TABLE ONLY race
 
 
 --
--- Name: ranged_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
+-- Name: weapon_ranged_pkey; Type: CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY weapon_ranged
-    ADD CONSTRAINT ranged_pkey PRIMARY KEY (ranged_id);
+    ADD CONSTRAINT weapon_ranged_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: weapon_ranged_image_weapon_ranged_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_ranged_image
+    ADD CONSTRAINT weapon_ranged_image_weapon_ranged_id_image_id_key UNIQUE (weapon_ranged_id, image_id);
 
 
 --
@@ -4269,7 +3852,7 @@ ALTER TABLE ONLY weapon_ranged
 --
 
 ALTER TABLE ONLY scale
-    ADD CONSTRAINT scale_pkey PRIMARY KEY (scale_id);
+    ADD CONSTRAINT scale_pkey PRIMARY KEY (id);
 
 
 --
@@ -4301,7 +3884,15 @@ ALTER TABLE ONLY skill_specialization
 --
 
 ALTER TABLE ONLY starship
-    ADD CONSTRAINT starship_pkey PRIMARY KEY (starship_id);
+    ADD CONSTRAINT starship_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: starship_image_starship_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY starship_image
+    ADD CONSTRAINT starship_image_starship_id_image_id_key UNIQUE (starship_id, image_id);
 
 
 --
@@ -4309,7 +3900,7 @@ ALTER TABLE ONLY starship
 --
 
 ALTER TABLE ONLY starship_weapon
-    ADD CONSTRAINT starship_weapon_pkey PRIMARY KEY (starship_weapon_id);
+    ADD CONSTRAINT starship_weapon_pkey PRIMARY KEY (id);
 
 
 --
@@ -4317,7 +3908,15 @@ ALTER TABLE ONLY starship_weapon
 --
 
 ALTER TABLE ONLY vehicle
-    ADD CONSTRAINT vehicle_pkey PRIMARY KEY (vehicle_id);
+    ADD CONSTRAINT vehicle_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vehicle_image_vehicle_id_image_id_key; Type: CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY vehicle_image
+    ADD CONSTRAINT vehicle_image_vehicle_id_image_id_key UNIQUE (vehicle_id, image_id);
 
 
 --
@@ -4325,7 +3924,7 @@ ALTER TABLE ONLY vehicle
 --
 
 ALTER TABLE ONLY vehicle_weapon
-    ADD CONSTRAINT vehicle_weapon_pkey PRIMARY KEY (vehicle_weapon_id);
+    ADD CONSTRAINT vehicle_weapon_pkey PRIMARY KEY (id);
 
 
 --
@@ -4434,7 +4033,7 @@ CREATE INDEX character_weapon_ranged_ranged_id ON character_weapon_ranged USING 
 
 
 --
--- Name: starship_scale_id; Type: INDEX; Schema: public; Owner: swd6
+-- Name: starship_scale; Type: INDEX; Schema: public; Owner: swd6
 --
 
 CREATE INDEX starship_scale_id ON starship USING btree (scale_id);
@@ -4462,7 +4061,7 @@ CREATE INDEX starship_weapon_starship_id ON starship_weapon USING btree (starshi
 
 
 --
--- Name: vehicle_scale_id; Type: INDEX; Schema: public; Owner: swd6
+-- Name: vehicle_scale; Type: INDEX; Schema: public; Owner: swd6
 --
 
 CREATE INDEX vehicle_scale_id ON vehicle USING btree (scale_id);
@@ -4566,11 +4165,28 @@ ALTER TABLE ONLY character_attribute
 
 
 --
--- Name: character_sheet_character_type_id; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+-- Name: character_image_character_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY character_image
+    ADD CONSTRAINT character_image_character_id_fkey FOREIGN KEY (character_id) REFERENCES
+    character_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: character_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY character_image
+    ADD CONSTRAINT character_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: character_sheet_character_type; Type: FK CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY character_sheet
-    ADD CONSTRAINT character_sheet_character_type_id FOREIGN KEY (character_type_id) REFERENCES character_type(character_type_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_sheet_character_type_id_fkey FOREIGN KEY (character_type_id) REFERENCES character_type(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4634,7 +4250,7 @@ ALTER TABLE ONLY character_starship
 --
 
 ALTER TABLE ONLY character_starship
-    ADD CONSTRAINT character_starship_starship_id FOREIGN KEY (starship_id) REFERENCES starship(starship_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_starship_starship_id FOREIGN KEY (starship_id) REFERENCES starship(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4650,7 +4266,7 @@ ALTER TABLE ONLY character_vehicle
 --
 
 ALTER TABLE ONLY character_vehicle
-    ADD CONSTRAINT character_vehicle_vehicle_id FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_vehicle_vehicle_id FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4666,7 +4282,7 @@ ALTER TABLE ONLY character_weapon_explosive
 --
 
 ALTER TABLE ONLY character_weapon_explosive
-    ADD CONSTRAINT character_weapon_explosive_explosive_id FOREIGN KEY (explosive_id) REFERENCES weapon_explosive(explosive_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_weapon_explosive_explosive_id FOREIGN KEY (explosive_id) REFERENCES weapon_explosive(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4682,7 +4298,7 @@ ALTER TABLE ONLY character_weapon_melee
 --
 
 ALTER TABLE ONLY character_weapon_melee
-    ADD CONSTRAINT character_weapon_melee_melee_id FOREIGN KEY (melee_id) REFERENCES weapon_melee(melee_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_weapon_melee_melee_id FOREIGN KEY (melee_id) REFERENCES weapon_melee(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4698,7 +4314,7 @@ ALTER TABLE ONLY character_weapon_ranged
 --
 
 ALTER TABLE ONLY character_weapon_ranged
-    ADD CONSTRAINT character_weapon_ranged_ranged_id FOREIGN KEY (ranged_id) REFERENCES weapon_ranged(ranged_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT character_weapon_ranged_ranged_id FOREIGN KEY (ranged_id) REFERENCES weapon_ranged(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4790,11 +4406,12 @@ ALTER TABLE ONLY skill_specialization
 
 
 --
--- Name: starship_scale_id; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+-- Name: starship_scale; Type: FK CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY starship
-    ADD CONSTRAINT starship_scale_id FOREIGN KEY (scale_id) REFERENCES scale(scale_id) ON UPDATE RESTRICT ON DELETE SET NULL;
+    ADD CONSTRAINT starship_scale_id_fkey FOREIGN KEY (scale_id) REFERENCES scale(id) ON UPDATE
+    RESTRICT ON DELETE SET NULL;
 
 
 --
@@ -4803,6 +4420,22 @@ ALTER TABLE ONLY starship
 
 ALTER TABLE ONLY starship
     ADD CONSTRAINT starship_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES skill(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: starship_image_starship_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY starship_image
+    ADD CONSTRAINT starship_image_starship_id_fkey FOREIGN KEY (starship_id) REFERENCES starship(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: starship_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY starship_image
+    ADD CONSTRAINT starship_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4818,15 +4451,15 @@ ALTER TABLE ONLY starship_weapon
 --
 
 ALTER TABLE ONLY starship_weapon
-    ADD CONSTRAINT starship_weapon_starship_id FOREIGN KEY (starship_id) REFERENCES starship(starship_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT starship_weapon_starship_id FOREIGN KEY (starship_id) REFERENCES starship(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
--- Name: vehicle_scale_id; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+-- Name: vehicle_scale; Type: FK CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY vehicle
-    ADD CONSTRAINT vehicle_scale_id FOREIGN KEY (scale_id) REFERENCES scale(scale_id) ON UPDATE RESTRICT ON DELETE SET NULL;
+    ADD CONSTRAINT vehicle_scale_id_fkey FOREIGN KEY (scale_id) REFERENCES scale(id) ON UPDATE RESTRICT ON DELETE SET NULL;
 
 
 --
@@ -4835,6 +4468,22 @@ ALTER TABLE ONLY vehicle
 
 ALTER TABLE ONLY vehicle
     ADD CONSTRAINT vehicle_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES skill(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: vehicle_image_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY vehicle_image
+    ADD CONSTRAINT vehicle_image_vehicle_id_fkey FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: vehicle_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY vehicle_image
+    ADD CONSTRAINT vehicle_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -4850,7 +4499,7 @@ ALTER TABLE ONLY vehicle_weapon
 --
 
 ALTER TABLE ONLY vehicle_weapon
-    ADD CONSTRAINT vehicle_weapon_vehicle_id FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT vehicle_weapon_vehicle_id FOREIGN KEY (vehicle_id) REFERENCES vehicle(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4858,7 +4507,7 @@ ALTER TABLE ONLY vehicle_weapon
 --
 
 ALTER TABLE ONLY weapon_explosive_damage
-    ADD CONSTRAINT weapon_explosive_damage_explosive_id FOREIGN KEY (explosive_id) REFERENCES weapon_explosive(explosive_id) ON UPDATE RESTRICT ON DELETE CASCADE;
+    ADD CONSTRAINT weapon_explosive_damage_explosive_id FOREIGN KEY (explosive_id) REFERENCES weapon_explosive(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
@@ -4870,6 +4519,22 @@ ALTER TABLE ONLY weapon_explosive
 
 
 --
+-- Name: weapon_explosive_image_weapon_explosive_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_explosive_image
+    ADD CONSTRAINT weapon_explosive_image_weapon_explosive_id_fkey FOREIGN KEY (weapon_explosive_id) REFERENCES weapon_explosive(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: weapon_explosive_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_explosive_image
+    ADD CONSTRAINT weapon_explosive_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: weapon_melee_skill_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
 --
 
@@ -4878,11 +4543,43 @@ ALTER TABLE ONLY weapon_melee
 
 
 --
+-- Name: weapon_melee_image_weapon_melee_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_melee_image
+    ADD CONSTRAINT weapon_melee_image_weapon_melee_id_fkey FOREIGN KEY (weapon_melee_id) REFERENCES weapon_melee(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: weapon_melee_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_melee_image
+    ADD CONSTRAINT weapon_melee_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: weapon_ranged_skill_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
 --
 
 ALTER TABLE ONLY weapon_ranged
     ADD CONSTRAINT weapon_ranged_skill_id_fkey FOREIGN KEY (skill_id) REFERENCES skill(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: weapon_ranged_image_weapon_ranged_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_ranged_image
+    ADD CONSTRAINT weapon_ranged_image_weapon_ranged_id_fkey FOREIGN KEY (weapon_ranged_id) REFERENCES weapon_ranged(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+
+--
+-- Name: weapon_ranged_image_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: swd6
+--
+
+ALTER TABLE ONLY weapon_ranged_image
+    ADD CONSTRAINT weapon_ranged_image_image_id_fkey FOREIGN KEY (image_id) REFERENCES image(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
