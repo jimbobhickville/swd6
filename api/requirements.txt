@@ -7,3 +7,4 @@ gunicorn
 oslo.config
 sqlalchemy_jsonapi
 blinker
+flask-cors

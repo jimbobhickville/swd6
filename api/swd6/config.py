@@ -44,6 +44,9 @@ api_opts = [
     cfg.StrOpt('host',
                default=get_host_from_env(),
                help='Path to the API host (i.e. localhost:8080).'),
+    cfg.ListOpt('cors_hosts',
+                default=['http://localhost:9090'],
+                help='Paths that we should allow cross-origin requests from.'),
 ]
 
 CONF.register_opts(api_opts, group=api_group)
