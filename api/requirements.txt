@@ -5,6 +5,7 @@ SQLAlchemy-Utils
 Flask-SQLAlchemy
 gunicorn
 oslo.config
-sqlalchemy_jsonapi
 blinker
 flask-cors
+simplejson
+sqlalchemy_jsonapi
