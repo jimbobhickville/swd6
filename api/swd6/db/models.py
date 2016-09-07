@@ -1,6 +1,8 @@
 import flask_sqlalchemy
 from sqlalchemy.dialects import postgresql as pg
 
+#  pylint: disable=no-member
+
 db = flask_sqlalchemy.SQLAlchemy()
 
 RarityEnum = pg.ENUM('Common', 'Rare', 'Not For Sale', name='rarity', metadata=db.metadata)
@@ -15,13 +17,14 @@ PlayableTypeEnum = pg.ENUM('PC', 'NPC', 'Creature', name='playable_type', metada
 LanguageAbilityEnum = pg.ENUM('Speak', 'Understand', 'None', name='language_ability',
                               metadata=db.metadata)
 
+
 class Armor(db.Model):
     __tablename__ = 'armor'
 
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     areas_covered = db.Column(pg.ARRAY(BodyAreasEnum), nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     resist_physical = db.Column(db.Numeric(3, 1), nullable=False)
     resist_energy = db.Column(db.Numeric(3, 1), nullable=False)
     rarity = db.Column(RarityEnum, nullable=False, server_default=db.text("'Common'::rarity"))
@@ -46,7 +49,7 @@ class Attribute(db.Model):
 
     name = db.Column(db.String(30), nullable=False)
     id = db.Column(db.String(3), primary_key=True)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     display_order = db.Column(db.SmallInteger, nullable=False)
 
 
@@ -84,10 +87,10 @@ class CharacterSheet(db.Model):
     character_type_id = db.Column(db.ForeignKey('character_type.id', ondelete='CASCADE',
                                                 onupdate='RESTRICT'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    background = db.Column(db.Text, nullable=False)
-    motivation = db.Column(db.Text, nullable=False)
-    quote = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    background = db.Column(db.Text)
+    motivation = db.Column(db.Text)
+    quote = db.Column(db.Text)
     gender = db.Column(GenderEnum, nullable=False, server_default=db.text("'M'::gender"))
     age = db.Column(db.SmallInteger, nullable=False)
     height = db.Column(db.Numeric(3, 1), nullable=False)
@@ -213,9 +216,9 @@ class ForceAbility(db.Model):
     __tablename__ = 'force_ability'
 
     name = db.Column(db.String(100), nullable=False)
-    difficulty = db.Column(db.Text, nullable=False)
+    difficulty = db.Column(db.Text)
     time_required = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     force_power_id = db.Column(pg.UUID)
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
 
@@ -236,7 +239,7 @@ class ForcePower(db.Model):
 
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
 
 
 class Image(db.Model):
@@ -257,7 +260,7 @@ class Planet(db.Model):
     __tablename__ = 'planet'
 
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
 
     images = db.relationship('Image', secondary='planet_image')
@@ -281,9 +284,9 @@ class Race(db.Model):
     name = db.Column(db.String(100), nullable=False)
     basic_ability = db.Column(LanguageAbilityEnum, nullable=False,
                               server_default=db.text("'Speak'::language_ability"))
-    description = db.Column(db.Text, nullable=False)
-    special_abilities = db.Column(db.Text, nullable=False)
-    story_factors = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    special_abilities = db.Column(db.Text)
+    story_factors = db.Column(db.Text)
     min_move_land = db.Column(db.SmallInteger, nullable=False,
                               server_default=db.text("'10'::smallint"))
     max_move_land = db.Column(db.SmallInteger, nullable=False,
@@ -304,7 +307,7 @@ class Race(db.Model):
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     planet_id = db.Column(db.ForeignKey('planet.id', ondelete='RESTRICT', onupdate='CASCADE'))
 
-    planet = db.relationship('Planet')
+    planet = db.relationship('Planet', backref='races')
     images = db.relationship('Image', secondary='race_image')
 
 
@@ -332,7 +335,7 @@ class RaceAttribute(db.Model):
                                            onupdate='CASCADE'), nullable=False)
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
 
-    attribute = db.relationship('Attribute')
+    attribute = db.relationship('Attribute', backref='attribute_race_attributes')
     race = db.relationship('Race', backref='race_attributes')
 
 
@@ -347,7 +350,7 @@ class Skill(db.Model):
     __tablename__ = 'skill'
 
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     has_specializations = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
     id = db.Column(pg.UUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     attribute_id = db.Column(db.ForeignKey('attribute.id', ondelete='RESTRICT',
@@ -388,7 +391,7 @@ class Starship(db.Model):
                          index=True)
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     length = db.Column(db.Float(53), nullable=False)
     capacity_crew = db.Column(db.SmallInteger, nullable=False)
     capacity_passengers = db.Column(db.SmallInteger, nullable=False)
@@ -471,7 +474,7 @@ class Vehicle(db.Model):
                          index=True)
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     cover = db.Column(db.Float(53), nullable=False)
     capacity_crew = db.Column(db.SmallInteger, nullable=False)
     capacity_passengers = db.Column(db.SmallInteger, nullable=False)
@@ -537,7 +540,7 @@ class WeaponExplosive(db.Model):
     skill_id = db.Column(db.ForeignKey('skill.id', ondelete='RESTRICT', onupdate='CASCADE'),
                          index=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     range_minimum = db.Column(db.SmallInteger, nullable=False)
     range_short = db.Column(db.SmallInteger, nullable=False)
     range_medium = db.Column(db.SmallInteger, nullable=False)
@@ -573,7 +576,7 @@ class WeaponMelee(db.Model):
     skill_id = db.Column(db.ForeignKey('skill.id', ondelete='RESTRICT', onupdate='CASCADE'),
                          index=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     damage = db.Column(db.Numeric(3, 1), nullable=False)
     max_damage = db.Column(db.Numeric(3, 1), nullable=False)
 
@@ -598,7 +601,7 @@ class WeaponRanged(db.Model):
     skill_id = db.Column(db.ForeignKey('skill.id', ondelete='RESTRICT', onupdate='CASCADE'),
                          index=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
     fire_rate = db.Column(db.Float(53))
     range_minimum = db.Column(db.SmallInteger, nullable=False)
     range_short = db.Column(db.SmallInteger, nullable=False)

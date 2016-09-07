@@ -1,9 +1,12 @@
-from oslo_config import cfg
 import os
+from oslo_config import cfg
 
 CONF = cfg.CONF
 
-# TODO: config file parsing
+
+def load(args, default_config_files=None):
+    CONF(args, project='swd6', default_config_files=default_config_files)
+
 
 def get_host_from_env():
     host = os.environ.get('API_HOST', 'localhost')
@@ -36,14 +39,17 @@ CONF.register_opts(db_opts, group=db_group)
 ######################################################################
 
 api_group = cfg.OptGroup(name='api',
-                        title='Configs for the database connection.')
+                         title='Configs for the database connection.')
 
 CONF.register_group(api_group)
 
 api_opts = [
     cfg.StrOpt('host',
                default=get_host_from_env(),
-               help='Path to the API host (i.e. localhost:8080).'),
+               help='URL to the API host (i.e. localhost:8080).'),
+    cfg.StrOpt('path',
+               default='/api',
+               help='Path where the root endpoint resides.'),
     cfg.ListOpt('cors_hosts',
                 default=['http://localhost:9090'],
                 help='Paths that we should allow cross-origin requests from.'),
