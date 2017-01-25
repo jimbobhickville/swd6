@@ -4,12 +4,12 @@ import reduceReducers from 'reduce-reducers';
 import queryString from 'query-string';
 
 
-const generateRaceAttributes = (state, action) => {
+const buildIncludeMap = (state, action) => {
   let newState = state;
 
   switch (action.type) {
     case 'API_READ':
-      const [paramStr] = action.payload.endpoint.split('?');
+      const paramStr = action.payload.endpoint.split('?', 2).pop();
       const params = queryString.parse(paramStr);
       const includes = params.include ? params.include.split(',') : [];
 
@@ -38,4 +38,4 @@ const combinedReducer = combineReducers({
 });
 
 // Join all reducers into one.
-export default reduceReducers(combinedReducer, generateRaceAttributes);
+export default reduceReducers(combinedReducer, buildIncludeMap);
