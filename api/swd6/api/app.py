@@ -24,7 +24,7 @@ def start():
 
     app.logger.setLevel(logging.DEBUG)
 
-    flask_cors.CORS(app, origins=CONF.api.cors_hosts)
+    flask_cors.CORS(app, origins=CONF.api.cors_hosts, supports_credentials=True)
 
     logging.getLogger('flask_cors').level = logging.DEBUG
 
