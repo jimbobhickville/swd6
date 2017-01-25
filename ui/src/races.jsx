@@ -48,7 +48,7 @@ export class RaceRow extends React.Component {
     } = this;
 
     var raceAttributeMap = {};
-    race.relationships.race_attributes.data.map(relationship => {
+    race.relationships.race_attributes.data.forEach(relationship => {
       const raceAttribute = includeMap.race_attributes[relationship.id];
       if (raceAttribute) {
         raceAttributeMap[raceAttribute.attributes.attribute_id] = raceAttribute;
@@ -58,7 +58,7 @@ export class RaceRow extends React.Component {
     var thumbnail = "";
     if (race.relationships.images.data.length > 0) {
       const image = includeMap.images[race.relationships.images.data[0].id];
-      thumbnail = <img src={`http://swd6.gnhill.net/uploads/images/${image.attributes.dir}/thumbs/${image.attributes.name}`} />
+      thumbnail = <img src={`http://swd6.gnhill.net/uploads/images/${image.attributes.dir}/thumbs/${image.attributes.name}`} alt={`${image.attributes.name} logo`} />
     }
 
     var raceAttributeColumns;
