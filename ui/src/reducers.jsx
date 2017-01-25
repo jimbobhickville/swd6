@@ -9,12 +9,12 @@ const generateRaceAttributes = (state, action) => {
 
   switch (action.type) {
     case 'API_READ':
-      const [url, paramStr] = action.payload.endpoint.split('?');
+      const [paramStr] = action.payload.endpoint.split('?');
       const params = queryString.parse(paramStr);
       const includes = params.include ? params.include.split(',') : [];
 
       const includeMap = state.includeMap || {};
-      includes.map(includeKey => {
+      includes.forEach(includeKey => {
         includeMap[includeKey] = state.api[includeKey].data.reduce((partialMap, includedObj) => {
           const map = partialMap;
           map[includedObj.id] = includedObj;
