@@ -6,16 +6,17 @@
     "react-scripts": "0.8.5"
   },
   "dependencies": {
+    "query-string": "^4.2.3",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
+    "react-jsonschema-form": "^0.41.2",
     "react-redux": "^4.4.5",
     "react-router": "^2.6.1",
     "reduce-reducers": "^0.1.2",
     "redux": "^3.5.2",
     "redux-json-api": "^1.4.4",
     "redux-logger": "^2.6.1",
-    "redux-thunk": "^2.1.0",
-    "query-string": "^4.2.3"
+    "redux-thunk": "^2.1.0"
   },
   "scripts": {
     "start": "PORT=9090 react-scripts start",
